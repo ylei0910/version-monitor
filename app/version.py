@@ -60,7 +60,7 @@ async def fetch_installed_version(
     if version_template:
         version = _extract_by_template(data, version_template)
         if version is None:
-            return None, f"version_template fields missing from response"
+            return None, "version_template fields missing from response"
         return version, None
 
     return None, "no version_key or version_template configured"
