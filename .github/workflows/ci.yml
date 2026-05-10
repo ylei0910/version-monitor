@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint & syntax check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt ruff
+
+      - name: Syntax check
+        run: |
+          python -m py_compile \
+            app/__init__.py \
+            app/main.py \
+            app/config.py \
+            app/github.py \
+            app/version.py \
+            app/notifier.py \
+            app/scheduler.py \
+            app/database.py \
+            app/models.py
+
+      - name: Ruff lint
+        run: ruff check app/

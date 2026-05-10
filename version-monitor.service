@@ -1,0 +1,20 @@
+[Unit]
+Description=Version Monitor Web App
+After=network.target
+
+[Service]
+Type=simple
+User=vmonitor
+Group=vmonitor
+WorkingDirectory=/opt/version-monitor
+Environment="PATH=/opt/version-monitor/venv/bin"
+EnvironmentFile=/opt/version-monitor/.env
+ExecStart=/opt/version-monitor/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8080
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=version-monitor
+
+[Install]
+WantedBy=multi-user.target

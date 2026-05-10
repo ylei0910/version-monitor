@@ -1,0 +1,14 @@
+services:
+  - name: Gitea
+    github: go-gitea/gitea
+    version_url: "http://192.168.1.10:3000/api/v1/version"
+    version_key: "version"
+
+  - name: Immich
+    github: immich-app/immich
+    version_url: "http://192.168.1.11:2283/api/server/version"
+    version_template: "{major}.{minor}.{patch}"
+
+  - name: Vaultwarden
+    github: dani-garcia/vaultwarden
+    # no version_url — manual input in UI
