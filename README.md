@@ -6,7 +6,7 @@ A self-hosted web app that shows installed versions of your self-hosted services
 
 ## Features
 
-- **Status grid** — dark theme, one card per service, green/red/yellow indicator
+- **Status grid** — dark theme, one card per service; green = up to date, yellow = update available, red = status unknown
 - **Two version sources** — HTTP endpoint (JSON key or template) or manual input via the UI
 - **GitHub releases** — fetches latest release once per day (configurable); no token needed for typical setups
 - **Telegram notifications** — single message listing outdated services and fetch failures, sent on the same schedule as the version check

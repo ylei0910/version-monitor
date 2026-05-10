@@ -126,8 +126,8 @@ body {
   margin-left: 8px;
 }
 .status-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
-.status-dot.outdated { background: var(--red); box-shadow: 0 0 6px var(--red); }
-.status-dot.unknown { background: var(--yellow); }
+.status-dot.outdated { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+.status-dot.unknown { background: var(--red); }
 
 .card-versions {
   display: flex;
