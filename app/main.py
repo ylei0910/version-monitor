@@ -205,6 +205,8 @@ async def get_config():
     async with _config_lock:
         services = list(_config.services)
         interval = _config.github_check_interval_minutes
+        has_telegram_token = bool(_config.telegram_bot_token)
+        has_telegram_chat_id = bool(_config.telegram_chat_id)
 
     meta = [
         ConfigServiceMeta(
@@ -224,8 +226,8 @@ async def get_config():
         settings=AppSettings(
             github_check_interval_minutes=interval,
             scheduler_enabled=interval > 0,
-            has_telegram_token=bool(_config.telegram_bot_token),
-            has_telegram_chat_id=bool(_config.telegram_chat_id),
+            has_telegram_token=has_telegram_token,
+            has_telegram_chat_id=has_telegram_chat_id,
         ),
     )
 
