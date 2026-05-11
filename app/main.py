@@ -14,12 +14,15 @@ from fastapi.staticfiles import StaticFiles
 from packaging.version import InvalidVersion
 from packaging.version import Version as PkgVersion
 
+from apscheduler.triggers.cron import CronTrigger
+
 from app.config import (
     AppConfig,
     load_config,
     reload_services,
     save_services,
     save_setting_interval,
+    save_setting_notify_cron,
     save_secrets,
 )
 from app.database import close_db, get_all_versions, init_db, set_version
@@ -126,6 +129,11 @@ async def _build_service_statuses() -> list[ServiceStatus]:
     return await asyncio.gather(*tasks)
 
 
+async def _run_check() -> None:
+    """Refresh GitHub version cache without sending notifications."""
+    await _build_service_statuses()
+
+
 async def _run_check_and_notify() -> NotifyResponse:
     statuses = await _build_service_statuses()
 
@@ -158,7 +166,7 @@ async def lifespan(app: FastAPI):
     _http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0))
     await init_db()
 
-    _scheduler = create_scheduler(_config, _run_check_and_notify)
+    _scheduler = create_scheduler(_config, _run_check, _run_check_and_notify)
     if _scheduler:
         _scheduler.start()
 
@@ -205,11 +213,21 @@ async def trigger_notify():
     return await _run_check_and_notify()
 
 
+@app.post("/api/refresh")
+async def trigger_refresh():
+    """Force-refresh GitHub latest versions by bypassing the cache."""
+    from app.github import clear_cache
+    clear_cache()
+    await _run_check()
+    return {"ok": True}
+
+
 @app.get("/api/config", response_model=ConfigResponse)
 async def get_config():
     async with _config_lock:
         services = list(_config.services)
         interval = _config.github_check_interval_minutes
+        notify_cron = _config.notify_cron
         has_telegram_token = bool(_config.telegram_bot_token)
         has_telegram_chat_id = bool(_config.telegram_chat_id)
         telegram_token = _config.telegram_bot_token or None
@@ -238,7 +256,8 @@ async def get_config():
         services=meta,
         settings=AppSettings(
             github_check_interval_minutes=interval,
-            scheduler_enabled=interval > 0,
+            notify_cron=notify_cron,
+            scheduler_enabled=interval > 0 or bool(notify_cron),
             has_telegram_token=has_telegram_token,
             has_telegram_chat_id=has_telegram_chat_id,
             telegram_bot_token=telegram_token,
@@ -303,16 +322,24 @@ async def update_settings(body: UpdateSettingsRequest):
             detail="github_check_interval_minutes must be 0 (disabled) or ≥1",
         )
 
+    if body.notify_cron:
+        try:
+            CronTrigger.from_crontab(body.notify_cron)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=f"Invalid notify_cron: {e}")
+
     try:
         save_setting_interval(body.github_check_interval_minutes)
+        save_setting_notify_cron(body.notify_cron)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update .env: {e}")
 
     async with _config_lock:
         _config.github_check_interval_minutes = body.github_check_interval_minutes
+        _config.notify_cron = body.notify_cron
 
     if _scheduler:
-        reschedule(_scheduler, _config, _run_check_and_notify)
+        reschedule(_scheduler, _config, _run_check, _run_check_and_notify)
 
     if body.telegram_bot_token or body.telegram_chat_id:
         async with _config_lock:
@@ -340,6 +367,7 @@ async def backup(include_secrets: bool = False):
     async with _config_lock:
         services = list(_config.services)
         interval = _config.github_check_interval_minutes
+        notify_cron = _config.notify_cron
 
     manual_versions = await get_all_versions()
 
@@ -357,7 +385,8 @@ async def backup(include_secrets: bool = False):
         manual_versions=manual_versions,
         settings=AppSettings(
             github_check_interval_minutes=interval,
-            scheduler_enabled=interval > 0,
+            notify_cron=notify_cron,
+            scheduler_enabled=interval > 0 or bool(notify_cron),
         ),
         secrets=secrets,
     )
@@ -390,14 +419,16 @@ async def restore(body: BackupData):
     # Restore settings
     try:
         save_setting_interval(body.settings.github_check_interval_minutes)
+        save_setting_notify_cron(body.settings.notify_cron)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to restore settings: {e}")
 
     async with _config_lock:
         _config.github_check_interval_minutes = body.settings.github_check_interval_minutes
+        _config.notify_cron = body.settings.notify_cron
 
     if _scheduler:
-        reschedule(_scheduler, _config, _run_check_and_notify)
+        reschedule(_scheduler, _config, _run_check, _run_check_and_notify)
 
     # Restore secrets if present
     if body.secrets:

@@ -19,7 +19,14 @@
     </svg>
     Notify Now
   </button>
-  <button class="btn btn-icon" id="settings-btn" title="Settings" style="margin-left:auto">&#9881;</button>
+  <button class="btn btn-icon" id="refresh-btn" title="Refresh GitHub versions" style="margin-left:auto">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/>
+      <polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+  </button>
+  <button class="btn btn-icon" id="settings-btn" title="Settings">&#9881;</button>
 </header>
 
 <div class="status-bar">
@@ -223,9 +230,14 @@
           <div class="hint">Status: <span id="telegram-chat-status" class="status-badge"></span></div>
         </div>
         <div class="field">
-          <label>Check Interval (minutes)</label>
+          <label>GitHub check interval (minutes)</label>
           <input id="setting-interval" type="number" min="0" step="1" placeholder="1440">
-          <div class="hint">How often to fetch latest versions and send notifications. Set to 0 to disable the scheduler.</div>
+          <div class="hint">How often to poll GitHub for new releases. Set to 0 to disable.</div>
+        </div>
+        <div class="field">
+          <label>Notify schedule (cron)</label>
+          <input id="setting-notify-cron" type="text" placeholder="0 9 * * *">
+          <div class="hint">When to send Telegram notifications, e.g. <code>0 9 * * *</code> = daily at 9am. Leave empty to disable.</div>
         </div>
         <div>
           <button class="btn btn-primary" id="save-settings-btn">Save Settings</button>

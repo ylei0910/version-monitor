@@ -69,6 +69,7 @@ class ConfigServiceMeta(BaseModel):
 
 class AppSettings(BaseModel):
     github_check_interval_minutes: int
+    notify_cron: Optional[str] = None
     scheduler_enabled: bool
     has_telegram_token: bool = False
     has_telegram_chat_id: bool = False
@@ -87,6 +88,7 @@ class UpdateServicesRequest(BaseModel):
 
 class UpdateSettingsRequest(BaseModel):
     github_check_interval_minutes: int
+    notify_cron: Optional[str] = None
     telegram_bot_token: Optional[str] = None
     telegram_chat_id: Optional[str] = None
 

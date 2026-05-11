@@ -24,6 +24,7 @@ class AppConfig:
     telegram_bot_token: str
     telegram_chat_id: str
     github_check_interval_minutes: int
+    notify_cron: Optional[str] = None
     services: list[ServiceConfig] = field(default_factory=list)
 
 
@@ -86,6 +87,7 @@ def load_config() -> AppConfig:
         logger.warning("GITHUB_CHECK_INTERVAL_MINUTES cannot be negative, defaulting to 1440")
         interval = 1440
 
+    notify_cron = os.environ.get("NOTIFY_CRON", "").strip() or None
     services = _load_services(SERVICES_YAML)
 
     return AppConfig(
@@ -93,6 +95,7 @@ def load_config() -> AppConfig:
         telegram_bot_token=bot_token,
         telegram_chat_id=chat_id,
         github_check_interval_minutes=interval,
+        notify_cron=notify_cron,
         services=services,
     )
 
@@ -109,6 +112,36 @@ def save_services(services: list[ServiceConfig]) -> None:
     with open(tmp, "w") as f:
         yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
     tmp.replace(SERVICES_YAML)
+
+
+def save_setting_notify_cron(cron: Optional[str]) -> None:
+    """Update NOTIFY_CRON in the .env file."""
+    lines: list[str] = []
+    found = False
+
+    if ENV_FILE.exists():
+        with open(ENV_FILE) as f:
+            lines = f.readlines()
+
+    new_lines: list[str] = []
+    for line in lines:
+        if line.startswith("NOTIFY_CRON="):
+            if cron:
+                new_lines.append(f"NOTIFY_CRON={cron}\n")
+            found = True
+        else:
+            new_lines.append(line)
+
+    if not found and cron:
+        new_lines.append(f"NOTIFY_CRON={cron}\n")
+
+    with open(ENV_FILE, "w") as f:
+        f.writelines(new_lines)
+
+    if cron:
+        os.environ["NOTIFY_CRON"] = cron
+    else:
+        os.environ.pop("NOTIFY_CRON", None)
 
 
 def save_setting_interval(minutes: int) -> None:

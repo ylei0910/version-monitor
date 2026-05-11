@@ -15,6 +15,10 @@ _cache: dict[str, "_CacheEntry"] = {}
 _lock = asyncio.Lock()
 
 
+def clear_cache() -> None:
+    _cache.clear()
+
+
 @dataclass
 class _CacheEntry:
     version: Optional[str]

@@ -59,6 +59,8 @@ async function loadConfig() {
   // Populate settings form
   const intervalInput = document.getElementById('setting-interval');
   if (intervalInput) intervalInput.value = data.settings.github_check_interval_minutes;
+  const cronInput = document.getElementById('setting-notify-cron');
+  if (cronInput) cronInput.value = data.settings.notify_cron ?? '';
 
   const tokenInput = document.getElementById('setting-telegram-token');
   const tokenStatus = document.getElementById('telegram-token-status');
@@ -306,6 +308,20 @@ async function triggerNotify() {
   } finally {
     btn.disabled = false;
     btn.innerHTML = original;
+  }
+}
+
+async function triggerRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  try {
+    await apiFetch('/api/refresh', { method: 'POST' });
+    await loadServices();
+    showToast('GitHub versions refreshed');
+  } catch (e) {
+    showToast(`Refresh failed: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
   }
 }
 
@@ -647,12 +663,14 @@ async function saveAppSettings() {
   }
   const telegramToken = document.getElementById('setting-telegram-token').value.trim() || null;
   const telegramChatId = document.getElementById('setting-telegram-chat-id').value.trim() || null;
+  const notifyCron = document.getElementById('setting-notify-cron').value.trim() || null;
   try {
     await apiFetch('/api/config/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         github_check_interval_minutes: intervalVal,
+        notify_cron: notifyCron,
         ...(telegramToken !== null && { telegram_bot_token: telegramToken }),
         ...(telegramChatId !== null && { telegram_chat_id: telegramChatId }),
       }),
@@ -683,6 +701,7 @@ async function init() {
   }, REFRESH_INTERVAL);
 
   document.getElementById('notify-btn').addEventListener('click', triggerNotify);
+  document.getElementById('refresh-btn').addEventListener('click', triggerRefresh);
   document.getElementById('settings-btn').addEventListener('click', openModal);
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', e => {
