@@ -12,6 +12,7 @@ class ServiceConfig(BaseModel):
     version_url: Optional[str] = None
     version_key: Optional[str] = None
     version_template: Optional[str] = None
+    basic_auth: Optional[str] = None  # "username:password"
 
 
 class ServiceStatus(BaseModel):
@@ -53,6 +54,7 @@ class ConfigServiceMeta(BaseModel):
     version_template: Optional[str] = None
     has_version_url: bool
     has_github: bool
+    has_basic_auth: bool
 
 
 class AppSettings(BaseModel):

@@ -31,10 +31,16 @@ async def fetch_installed_version(
     version_key: Optional[str],
     version_template: Optional[str],
     client: httpx.AsyncClient,
+    basic_auth: Optional[str] = None,
 ) -> tuple[Optional[str], Optional[str]]:
     """Return (version, error)."""
+    auth = None
+    if basic_auth and ":" in basic_auth:
+        username, _, password = basic_auth.partition(":")
+        auth = (username, password)
+
     try:
-        resp = await client.get(version_url)
+        resp = await client.get(version_url, auth=auth)
     except (httpx.ConnectError, httpx.TimeoutException) as e:
         return None, f"unreachable ({type(e).__name__})"
     except Exception as e:

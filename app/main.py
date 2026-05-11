@@ -81,7 +81,8 @@ async def _build_service_statuses() -> list[ServiceStatus]:
 
         if svc.version_url:
             fetched, err = await fetch_installed_version(
-                svc.version_url, svc.version_key, svc.version_template, _http_client
+                svc.version_url, svc.version_key, svc.version_template, _http_client,
+                basic_auth=svc.basic_auth,
             )
             if fetched:
                 installed_version = fetched
@@ -209,6 +210,7 @@ async def get_config():
             version_template=svc.version_template,
             has_version_url=svc.version_url is not None,
             has_github=svc.github is not None,
+            has_basic_auth=svc.basic_auth is not None,
         )
         for svc in services
     ]
@@ -227,8 +229,16 @@ async def update_services(body: UpdateServicesRequest):
     if len(names) != len(set(names)):
         raise HTTPException(status_code=422, detail="Duplicate service names")
 
+    # Preserve basic_auth from existing config — it is never sent via the UI
+    async with _config_lock:
+        existing = {svc.name: svc.basic_auth for svc in _config.services}
+    merged = [
+        svc.model_copy(update={"basic_auth": svc.basic_auth or existing.get(svc.name)})
+        for svc in body.services
+    ]
+
     try:
-        save_services(body.services)
+        save_services(merged)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to write services.yaml: {e}")
 
