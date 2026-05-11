@@ -12,3 +12,9 @@ services:
   - name: Vaultwarden
     github: dani-garcia/vaultwarden
     # no version_url — manual input in UI
+
+  - name: MyApp
+    github: org/myapp
+    version_url: "http://192.168.1.12:8080/metrics"
+    version_metric: "cs_info"     # matches: cs_info{version="v1.2.3"} 0
+    # version_label: "version"    # optional, defaults to "version"

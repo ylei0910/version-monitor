@@ -12,6 +12,8 @@ class ServiceConfig(BaseModel):
     version_url: Optional[str] = None
     version_key: Optional[str] = None
     version_template: Optional[str] = None
+    version_metric: Optional[str] = None  # Prometheus metric name, e.g. "cs_info"
+    version_label: Optional[str] = None   # label to extract (default: "version")
     basic_auth: Optional[str] = None  # "username:password"
 
 
@@ -53,6 +55,8 @@ class ConfigServiceMeta(BaseModel):
     version_url: Optional[str] = None
     version_key: Optional[str] = None
     version_template: Optional[str] = None
+    version_metric: Optional[str] = None
+    version_label: Optional[str] = None
     has_version_url: bool
     has_github: bool
     has_basic_auth: bool

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Optional
 
 import httpx
@@ -18,6 +19,18 @@ def _extract_by_key(data: dict, key: str) -> Optional[str]:
     return str(current) if current is not None else None
 
 
+def _extract_from_metrics(text: str, metric_name: str, label: str = "version") -> Optional[str]:
+    """Extract a label value from a Prometheus text-format metrics response."""
+    pattern = re.compile(
+        rf'^{re.escape(metric_name)}\{{[^}}]*{re.escape(label)}="([^"]+)"'
+    )
+    for line in text.splitlines():
+        m = pattern.match(line)
+        if m:
+            return m.group(1)
+    return None
+
+
 def _extract_by_template(data: dict, template: str) -> Optional[str]:
     """{major}.{minor}.{patch} filled from flat JSON dict."""
     try:
@@ -32,6 +45,8 @@ async def fetch_installed_version(
     version_template: Optional[str],
     client: httpx.AsyncClient,
     basic_auth: Optional[str] = None,
+    version_metric: Optional[str] = None,
+    version_label: Optional[str] = None,
 ) -> tuple[Optional[str], Optional[str]]:
     """Return (version, error)."""
     auth = None
@@ -48,6 +63,13 @@ async def fetch_installed_version(
 
     if resp.status_code != 200:
         return None, f"HTTP {resp.status_code}"
+
+    if version_metric:
+        label = version_label or "version"
+        version = _extract_from_metrics(resp.text, version_metric, label)
+        if version is None:
+            return None, f"metric '{version_metric}' with label '{label}' not found in response"
+        return version, None
 
     try:
         data = resp.json()
@@ -69,4 +91,4 @@ async def fetch_installed_version(
             return None, "version_template fields missing from response"
         return version, None
 
-    return None, "no version_key or version_template configured"
+    return None, "no version_key, version_template, or version_metric configured"
