@@ -108,18 +108,20 @@
 
     <!-- Services Tab -->
     <div class="tab-panel active" id="tab-services">
-      <table class="services-table" id="services-table">
-        <thead>
-          <tr>
-            <th class="drag-col"></th>
-            <th>Name</th>
-            <th>GitHub</th>
-            <th>Version Source</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="services-table-body"></tbody>
-      </table>
+      <div style="overflow-x:auto">
+        <table class="services-table" id="services-table">
+          <thead>
+            <tr>
+              <th class="drag-col"></th>
+              <th>Name</th>
+              <th>GitHub</th>
+              <th>Version Source</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="services-table-body"></tbody>
+        </table>
+      </div>
 
       <button class="btn" id="add-service-btn" style="margin-top:16px">+ Add Service</button>
 
@@ -176,7 +178,17 @@
             <div class="field">
               <label>Latest regex <span class="text-muted" style="font-weight:normal">(optional)</span></label>
               <input id="sf-latest-regex" type="text" placeholder="v?(\d+\.\d+\.\d+)">
-              <div class="hint">Regex applied to the GitHub release tag, e.g. <code>v?(\d+\.\d+\.\d+)</code> to strip the <code>v</code></div>
+              <div class="hint">Regex applied to the latest version string</div>
+            </div>
+            <div class="field">
+              <label>Latest version URL <span class="text-muted" style="font-weight:normal">(optional)</span></label>
+              <input id="sf-latest-url" type="text" placeholder="http://192.168.1.10:8080/api/latest">
+              <div class="hint">REST API endpoint returning the latest version as JSON. Takes precedence over GitHub if set.</div>
+            </div>
+            <div class="field" id="sf-latest-key-field">
+              <label>Latest key</label>
+              <input id="sf-latest-key" type="text" placeholder="version">
+              <div class="hint">Dot-notation JSON key, e.g. <code>version</code> or <code>release.tag</code></div>
             </div>
             <div class="field">
               <label>Basic Auth</label>

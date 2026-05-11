@@ -44,7 +44,7 @@ from app.models import (
 )
 from app.notifier import send_telegram_notification
 from app.scheduler import create_scheduler, reschedule
-from app.version import _apply_regex, fetch_installed_version
+from app.version import _apply_regex, fetch_installed_version, fetch_latest_from_url
 
 logging.basicConfig(
     level=logging.INFO,
@@ -103,7 +103,16 @@ async def _build_service_statuses() -> list[ServiceStatus]:
         else:
             installed_version = manual_versions.get(svc.name)
 
-        if svc.github:
+        if svc.latest_url:
+            latest_version, lu_err = await fetch_latest_from_url(
+                svc.latest_url, svc.latest_key, _http_client,
+                basic_auth=svc.basic_auth,
+                auth_header=svc.auth_header,
+                latest_regex=svc.latest_regex,
+            )
+            if lu_err and not latest_version:
+                errors.append(f"Latest URL: {lu_err}")
+        elif svc.github:
             latest_version, gh_err = await get_latest_version(
                 svc.github, _http_client, token, ttl
             )
@@ -244,9 +253,12 @@ async def get_config():
             version_metric=svc.version_metric,
             version_label=svc.version_label,
             version_regex=svc.version_regex,
+            latest_url=svc.latest_url,
+            latest_key=svc.latest_key,
             latest_regex=svc.latest_regex,
             has_version_url=svc.version_url is not None,
             has_github=svc.github is not None,
+            has_latest_url=svc.latest_url is not None,
             has_basic_auth=svc.basic_auth is not None,
             has_auth_header=svc.auth_header is not None,
             basic_auth=svc.basic_auth,

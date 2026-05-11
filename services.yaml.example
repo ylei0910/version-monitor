@@ -26,3 +26,10 @@ services:
     version_key: "version"
     auth_header: "Bearer mytoken123"        # full Authorization header value
     # basic_auth: "admin:secret"            # alternative: HTTP Basic Auth (user:pass)
+
+  - name: CustomLatest
+    version_url: "http://192.168.1.14:8080/api/version"
+    version_key: "installed"
+    latest_url: "http://192.168.1.14:8080/api/latest"  # fetch latest from REST API instead of GitHub
+    latest_key: "version"                               # dot-notation key, e.g. "release.tag"
+    # latest_regex: "v?(\\d+\\.\\d+\\.\\d+)"           # optional: strip prefix from result

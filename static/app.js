@@ -454,7 +454,7 @@ function hideServiceForm() {
 }
 
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-latest-regex', 'sf-basic-auth', 'sf-auth-header'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-basic-auth', 'sf-auth-header'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'manual';
@@ -486,6 +486,8 @@ function openServiceForm(nameToEdit) {
     document.getElementById('sf-github').value = svc.github ?? '';
     document.getElementById('sf-version-url').value = svc.version_url ?? '';
     document.getElementById('sf-version-regex').value = svc.version_regex ?? '';
+    document.getElementById('sf-latest-url').value = svc.latest_url ?? '';
+    document.getElementById('sf-latest-key').value = svc.latest_key ?? '';
     document.getElementById('sf-latest-regex').value = svc.latest_regex ?? '';
     const authField = document.getElementById('sf-basic-auth');
     authField.value = svc.basic_auth ?? '';
@@ -536,6 +538,8 @@ async function saveServiceForm() {
   const version_regex = vtype !== 'manual'
     ? (document.getElementById('sf-version-regex').value.trim() || null)
     : null;
+  const latest_url = document.getElementById('sf-latest-url').value.trim() || null;
+  const latest_key = latest_url ? (document.getElementById('sf-latest-key').value.trim() || null) : null;
   const latest_regex = document.getElementById('sf-latest-regex').value.trim() || null;
   const basic_auth = vtype === 'manual' ? null : (document.getElementById('sf-basic-auth').value.trim() || null);
   const auth_header = vtype === 'manual' ? null : (document.getElementById('sf-auth-header').value.trim() || null);
@@ -544,6 +548,8 @@ async function saveServiceForm() {
     ...(version_key && { version_key }), ...(version_template && { version_template }),
     ...(version_metric && { version_metric }), ...(version_label && { version_label }),
     ...(version_regex && { version_regex }),
+    ...(latest_url && { latest_url }),
+    ...(latest_key && { latest_key }),
     ...(latest_regex && { latest_regex }),
     ...(basic_auth && { basic_auth }),
     ...(auth_header && { auth_header }) };
@@ -558,6 +564,8 @@ async function saveServiceForm() {
     ...(s.version_metric && { version_metric: s.version_metric }),
     ...(s.version_label && { version_label: s.version_label }),
     ...(s.version_regex && { version_regex: s.version_regex }),
+    ...(s.latest_url && { latest_url: s.latest_url }),
+    ...(s.latest_key && { latest_key: s.latest_key }),
     ...(s.latest_regex && { latest_regex: s.latest_regex }),
   }));
 

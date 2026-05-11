@@ -56,6 +56,50 @@ def _extract_by_template(data: dict, template: str) -> Optional[str]:
         return None
 
 
+async def fetch_latest_from_url(
+    latest_url: str,
+    latest_key: Optional[str],
+    client: httpx.AsyncClient,
+    basic_auth: Optional[str] = None,
+    auth_header: Optional[str] = None,
+    latest_regex: Optional[str] = None,
+) -> tuple[Optional[str], Optional[str]]:
+    """Return (version, error) by fetching the latest version from a REST API."""
+    auth = None
+    headers: dict[str, str] = {}
+    if auth_header:
+        headers["Authorization"] = auth_header
+    elif basic_auth and ":" in basic_auth:
+        username, _, password = basic_auth.partition(":")
+        auth = (username, password)
+
+    try:
+        resp = await client.get(latest_url, auth=auth, headers=headers)
+    except (httpx.ConnectError, httpx.TimeoutException) as e:
+        return None, f"unreachable ({type(e).__name__})"
+    except Exception as e:
+        return None, f"request error: {e}"
+
+    if resp.status_code != 200:
+        return None, f"HTTP {resp.status_code}"
+
+    try:
+        data = resp.json()
+    except Exception:
+        return None, "invalid JSON response"
+
+    if not isinstance(data, dict):
+        return None, "unexpected response format (not a JSON object)"
+
+    if not latest_key:
+        return None, "latest_key is required when using latest_url"
+
+    version = _extract_by_key(data, latest_key)
+    if version is None:
+        return None, f"latest_key '{latest_key}' not found in response"
+    return _post_process(version, latest_regex)
+
+
 async def fetch_installed_version(
     version_url: str,
     version_key: Optional[str],

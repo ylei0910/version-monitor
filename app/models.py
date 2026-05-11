@@ -15,7 +15,9 @@ class ServiceConfig(BaseModel):
     version_metric: Optional[str] = None  # Prometheus metric name, e.g. "cs_info"
     version_label: Optional[str] = None   # label to extract (default: "version")
     version_regex: Optional[str] = None   # regex applied to installed version
-    latest_regex: Optional[str] = None    # regex applied to latest version from GitHub
+    latest_url: Optional[str] = None      # REST API URL to fetch latest version from
+    latest_key: Optional[str] = None      # dot-notation JSON key for latest_url response
+    latest_regex: Optional[str] = None    # regex applied to latest version string
     basic_auth: Optional[str] = None  # "username:password"
     auth_header: Optional[str] = None  # raw Authorization header value, e.g. "Bearer <token>"
 
@@ -61,9 +63,12 @@ class ConfigServiceMeta(BaseModel):
     version_metric: Optional[str] = None
     version_label: Optional[str] = None
     version_regex: Optional[str] = None
+    latest_url: Optional[str] = None
+    latest_key: Optional[str] = None
     latest_regex: Optional[str] = None
     has_version_url: bool
     has_github: bool
+    has_latest_url: bool
     has_basic_auth: bool
     has_auth_header: bool
     basic_auth: Optional[str] = None
