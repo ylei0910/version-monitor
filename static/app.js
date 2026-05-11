@@ -325,7 +325,7 @@ function clearServiceForm() {
 
 function toggleVersionTypeFields(type) {
   const urlFields = document.getElementById('sf-url-fields');
-  urlFields.style.display = type === 'manual' ? 'none' : 'block';
+  urlFields.style.display = type === 'manual' ? 'none' : 'flex';
   document.getElementById('sf-key-field').style.display = type === 'key' ? 'block' : 'none';
   document.getElementById('sf-template-field').style.display = type === 'template' ? 'block' : 'none';
 }

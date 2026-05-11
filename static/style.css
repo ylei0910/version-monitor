@@ -293,6 +293,7 @@ body {
 }
 .service-form h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
 .form-grid { display: flex; flex-direction: column; gap: 12px; }
+#sf-url-fields { display: flex; flex-direction: column; gap: 12px; }
 
 .field label {
   display: block;
