@@ -56,15 +56,21 @@ async function loadConfig() {
   const intervalInput = document.getElementById('setting-interval');
   if (intervalInput) intervalInput.value = data.settings.github_check_interval_minutes;
 
+  const tokenInput = document.getElementById('setting-telegram-token');
   const tokenStatus = document.getElementById('telegram-token-status');
-  if (tokenStatus) {
-    tokenStatus.textContent = data.settings.has_telegram_token ? 'Configured' : 'Not set';
-    tokenStatus.className = 'status-badge ' + (data.settings.has_telegram_token ? 'configured' : 'missing');
+  if (tokenInput && tokenStatus) {
+    const hasToken = data.settings.has_telegram_token;
+    tokenInput.placeholder = hasToken ? 'Leave blank to keep current' : 'Enter token (required for notifications)';
+    tokenStatus.textContent = hasToken ? 'Configured' : 'Not set';
+    tokenStatus.className = 'status-badge ' + (hasToken ? 'configured' : 'missing');
   }
+  const chatInput = document.getElementById('setting-telegram-chat-id');
   const chatStatus = document.getElementById('telegram-chat-status');
-  if (chatStatus) {
-    chatStatus.textContent = data.settings.has_telegram_chat_id ? 'Configured' : 'Not set';
-    chatStatus.className = 'status-badge ' + (data.settings.has_telegram_chat_id ? 'configured' : 'missing');
+  if (chatInput && chatStatus) {
+    const hasChat = data.settings.has_telegram_chat_id;
+    chatInput.placeholder = hasChat ? 'Leave blank to keep current' : 'Enter chat ID (required for notifications)';
+    chatStatus.textContent = hasChat ? 'Configured' : 'Not set';
+    chatStatus.className = 'status-badge ' + (hasChat ? 'configured' : 'missing');
   }
   return data;
 }
