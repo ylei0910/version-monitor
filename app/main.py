@@ -112,8 +112,8 @@ async def _build_service_statuses() -> list[ServiceStatus]:
 
         return ServiceStatus(
             name=svc.name,
-            installed_version=installed_version.lstrip("v") if installed_version else None,
-            latest_version=latest_version.lstrip("v") if latest_version else None,
+            installed_version=installed_version,
+            latest_version=latest_version,
             is_up_to_date=is_up_to_date,
             is_manual=svc.version_url is None,
             has_github=svc.github is not None,

@@ -29,7 +29,7 @@ async def get_latest_version(
     token: Optional[str],
     ttl_seconds: int,
 ) -> tuple[Optional[str], Optional[str]]:
-    """Return (version, error). version strips leading 'v'."""
+    """Return (version, error)."""
     now = time.monotonic()
 
     async with _lock:
@@ -72,7 +72,7 @@ async def get_latest_version(
         try:
             data = resp.json()
             tag = data.get("tag_name", "")
-            version = tag.lstrip("v") if tag else None
+            version = tag if tag else None
             error = None if version else "missing tag_name in response"
         except Exception as e:
             version, error = None, f"parse error: {e}"
