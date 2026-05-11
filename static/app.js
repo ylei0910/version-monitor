@@ -140,7 +140,7 @@ async function saveVersion(name, version) {
 // ── Sorting ────────────────────────────────────────────────────────────────
 
 function currentSort() {
-  return localStorage.getItem(LS_SORT) || 'default';
+  return localStorage.getItem(LS_SORT) || 'custom';
 }
 
 function saveCustomOrder(names) {
@@ -660,7 +660,7 @@ async function saveAppSettings() {
 
 async function init() {
   // Restore saved sort
-  const savedSort = localStorage.getItem(LS_SORT) || 'default';
+  const savedSort = localStorage.getItem(LS_SORT) || 'custom';
   document.getElementById('sort-select').value = savedSort;
 
   try {
