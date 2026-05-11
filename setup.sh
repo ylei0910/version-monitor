@@ -153,8 +153,11 @@ if [ -n "${RUNNER_TOKEN}" ]; then
         systemctl restart "${RUNNER_SVC_NAME}"
     else
         echo "    Installing runner as systemd service..."
-        "${RUNNER_DIR}/svc.sh" install "${SERVICE_USER}"
-        "${RUNNER_DIR}/svc.sh" start
+        # svc.sh must be run from within the runner directory
+        pushd "${RUNNER_DIR}" > /dev/null
+        ./svc.sh install "${SERVICE_USER}"
+        ./svc.sh start
+        popd > /dev/null
     fi
 else
     echo ""
