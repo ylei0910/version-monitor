@@ -26,7 +26,7 @@ GITHUB_REPO="ylei0910/version-monitor"
 # ── 1. System dependencies ────────────────────────────────────────────────────
 echo "==> Installing system dependencies..."
 apt-get update -qq
-apt-get install -y python3 python3-pip python3-venv git curl sudo
+apt-get install -y python3 python3-pip python3-venv git curl
 
 # ── 2. Dedicated user ────────────────────────────────────────────────────────
 echo "==> Ensuring user '${SERVICE_USER}' exists..."
