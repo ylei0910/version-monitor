@@ -41,7 +41,7 @@ from app.models import (
 )
 from app.notifier import send_telegram_notification
 from app.scheduler import create_scheduler, reschedule
-from app.version import fetch_installed_version
+from app.version import _apply_regex, fetch_installed_version
 
 logging.basicConfig(
     level=logging.INFO,
@@ -105,6 +105,8 @@ async def _build_service_statuses() -> list[ServiceStatus]:
             )
             if gh_err and not latest_version:
                 errors.append(f"GitHub: {gh_err}")
+            if latest_version and svc.version_regex:
+                latest_version = _apply_regex(latest_version, svc.version_regex) or latest_version
 
         is_up_to_date: Optional[bool] = None
         if installed_version and latest_version:
