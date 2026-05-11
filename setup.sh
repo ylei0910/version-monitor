@@ -42,23 +42,25 @@ echo "==> Setting up application directory..."
 if [ -n "${REPO_URL}" ]; then
     if [ -d "${INSTALL_DIR}/.git" ]; then
         echo "    Repository already cloned — pulling latest..."
-        runuser -u "${SERVICE_USER}" -- git -C "${INSTALL_DIR}" pull --ff-only
+        git -C "${INSTALL_DIR}" pull --ff-only
     else
         git clone "${REPO_URL}" "${INSTALL_DIR}"
     fi
 fi
-chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}"
+# Repo owned by root — runner and deploy also run as root, no ownership conflict
+chown -R root:root "${INSTALL_DIR}"
 
 # ── 4. Python virtual environment ────────────────────────────────────────────
 echo "==> Setting up Python virtual environment..."
 # python3 -m venv is safe to re-run on an existing venv
-runuser -u "${SERVICE_USER}" -- python3 -m venv "${VENV_DIR}"
-runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/pip" install --quiet --upgrade pip
-runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/pip" install --quiet -r "${INSTALL_DIR}/requirements.txt"
+python3 -m venv "${VENV_DIR}"
+"${VENV_DIR}/bin/pip" install --quiet --upgrade pip
+"${VENV_DIR}/bin/pip" install --quiet -r "${INSTALL_DIR}/requirements.txt"
 
 # ── 5. Data directory ────────────────────────────────────────────────────────
 echo "==> Ensuring data directory exists..."
 mkdir -p "${INSTALL_DIR}/data"
+# data/ must be writable by the app user (vmonitor) for SQLite
 chown "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}/data"
 
 # ── 6. Configuration files ───────────────────────────────────────────────────
