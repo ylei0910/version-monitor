@@ -155,7 +155,12 @@
             <div class="field">
               <label>Version regex <span class="text-muted" style="font-weight:normal">(optional)</span></label>
               <input id="sf-version-regex" type="text" placeholder="v?(\d+\.\d+\.\d+)">
-              <div class="hint">Regex with one capture group to trim the extracted value, e.g. <code>v?(\d+\.\d+\.\d+)</code></div>
+              <div class="hint">Regex applied to the installed version value, e.g. <code>v?(\d+\.\d+\.\d+)</code></div>
+            </div>
+            <div class="field">
+              <label>Latest regex <span class="text-muted" style="font-weight:normal">(optional)</span></label>
+              <input id="sf-latest-regex" type="text" placeholder="v?(\d+\.\d+\.\d+)">
+              <div class="hint">Regex applied to the GitHub release tag, e.g. <code>v?(\d+\.\d+\.\d+)</code> to strip the <code>v</code></div>
             </div>
             <div class="field">
               <label>Basic Auth</label>

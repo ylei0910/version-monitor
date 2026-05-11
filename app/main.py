@@ -105,8 +105,8 @@ async def _build_service_statuses() -> list[ServiceStatus]:
             )
             if gh_err and not latest_version:
                 errors.append(f"GitHub: {gh_err}")
-            if latest_version and svc.version_regex:
-                latest_version = _apply_regex(latest_version, svc.version_regex) or latest_version
+            if latest_version and svc.latest_regex:
+                latest_version = _apply_regex(latest_version, svc.latest_regex) or latest_version
 
         is_up_to_date: Optional[bool] = None
         if installed_version and latest_version:
@@ -225,6 +225,7 @@ async def get_config():
             version_metric=svc.version_metric,
             version_label=svc.version_label,
             version_regex=svc.version_regex,
+            latest_regex=svc.latest_regex,
             has_version_url=svc.version_url is not None,
             has_github=svc.github is not None,
             has_basic_auth=svc.basic_auth is not None,
