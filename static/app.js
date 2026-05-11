@@ -541,8 +541,8 @@ async function saveServiceForm() {
   const latest_url = document.getElementById('sf-latest-url').value.trim() || null;
   const latest_key = latest_url ? (document.getElementById('sf-latest-key').value.trim() || null) : null;
   const latest_regex = document.getElementById('sf-latest-regex').value.trim() || null;
-  const basic_auth = vtype === 'manual' ? null : (document.getElementById('sf-basic-auth').value.trim() || null);
-  const auth_header = vtype === 'manual' ? null : (document.getElementById('sf-auth-header').value.trim() || null);
+  const basic_auth = document.getElementById('sf-basic-auth').value.trim() || null;
+  const auth_header = document.getElementById('sf-auth-header').value.trim() || null;
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
     ...(version_key && { version_key }), ...(version_template && { version_template }),
