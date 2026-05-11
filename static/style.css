@@ -303,6 +303,7 @@ body {
 }
 .services-table tr:last-child td { border-bottom: none; }
 .td-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.source-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 
 /* ── Service Form ── */
 .service-form {

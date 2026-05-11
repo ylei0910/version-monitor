@@ -289,19 +289,25 @@ function populateServicesTable(configData) {
 
   for (const svc of configData.services) {
     const tr = document.createElement('tr');
-    const versionSource = svc.version_key
-      ? `key: <code>${escapeHtml(svc.version_key)}</code>`
-      : svc.version_template
-        ? `tmpl: <code>${escapeHtml(svc.version_template)}</code>`
-        : svc.version_url
-          ? `url only`
-          : `<span class="badge manual">manual</span>`;
-    const authBadge = svc.has_basic_auth ? ` <span class="badge" title="Basic auth configured">&#128274;</span>` : '';
+    let sourceHtml, sourceTitle = '';
+    if (svc.version_key) {
+      sourceHtml = `key: <code>${escapeHtml(svc.version_key)}</code>`;
+    } else if (svc.version_template) {
+      sourceHtml = `<span class="badge" title="${escapeHtml(svc.version_template)}">template</span>`;
+      sourceTitle = svc.version_template;
+    } else if (svc.version_url) {
+      sourceHtml = `<span class="text-muted">url</span>`;
+    } else {
+      sourceHtml = `<span class="badge manual">manual</span>`;
+    }
+    const authBadge = svc.has_basic_auth
+      ? `<span class="badge" title="Basic auth configured">&#128274;</span>`
+      : '';
 
     tr.innerHTML = `
       <td><strong>${escapeHtml(svc.name)}</strong></td>
       <td class="text-muted">${escapeHtml(svc.github ?? '—')}</td>
-      <td>${versionSource}${authBadge}</td>
+      <td><div class="source-cell">${sourceHtml}${authBadge}</div></td>
       <td>
         <div class="td-actions">
           <button class="btn" data-action="edit" data-name="${escapeHtml(svc.name)}">Edit</button>
