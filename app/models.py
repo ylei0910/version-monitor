@@ -28,6 +28,7 @@ class ServiceStatus(BaseModel):
 class ServiceListResponse(BaseModel):
     services: list[ServiceStatus]
     last_updated: datetime
+    last_github_fetch: Optional[datetime] = None
 
 
 class SaveVersionRequest(BaseModel):

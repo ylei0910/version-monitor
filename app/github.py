@@ -4,6 +4,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
 
 import httpx
@@ -17,7 +18,8 @@ _lock = asyncio.Lock()
 @dataclass
 class _CacheEntry:
     version: Optional[str]
-    fetched_at: float
+    fetched_at: float          # monotonic, for TTL math
+    fetched_at_wall: datetime  # wall-clock, for display
     error: Optional[str]
 
 
@@ -76,9 +78,21 @@ async def get_latest_version(
             version, error = None, f"parse error: {e}"
 
     async with _lock:
-        _cache[repo] = _CacheEntry(version=version, fetched_at=time.monotonic(), error=error)
+        _cache[repo] = _CacheEntry(
+            version=version,
+            fetched_at=time.monotonic(),
+            fetched_at_wall=datetime.now(timezone.utc),
+            error=error,
+        )
 
     return version, error
+
+
+def get_last_fetch_time() -> Optional[datetime]:
+    """Return the most recent wall-clock time any GitHub release was fetched."""
+    if not _cache:
+        return None
+    return max(entry.fetched_at_wall for entry in _cache.values())
 
 
 def clear_cache(repo: Optional[str] = None) -> None:

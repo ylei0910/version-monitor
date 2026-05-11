@@ -28,7 +28,7 @@ function showToast(message, type = 'success') {
 
 function formatDate(iso) {
   try {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch {
     return iso;
   }
@@ -94,7 +94,10 @@ async function loadServices() {
   }
 
   const updated = document.getElementById('last-updated');
-  updated.textContent = `Last checked: ${formatDate(data.last_updated)}`;
+  const githubPart = data.last_github_fetch
+    ? ` · Latest checked ${formatDate(data.last_github_fetch)}`
+    : '';
+  updated.textContent = `Refreshed ${formatDate(data.last_updated)}${githubPart}`;
 }
 
 async function saveVersion(name, version) {

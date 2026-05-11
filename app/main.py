@@ -23,7 +23,7 @@ from app.config import (
     save_secrets,
 )
 from app.database import close_db, get_all_versions, init_db, set_version
-from app.github import get_latest_version
+from app.github import get_last_fetch_time, get_latest_version
 from app.models import (
     AppSettings,
     ConfigResponse,
@@ -179,6 +179,7 @@ async def list_services():
     return ServiceListResponse(
         services=statuses,
         last_updated=datetime.now(timezone.utc),
+        last_github_fetch=get_last_fetch_time(),
     )
 
 
