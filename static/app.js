@@ -510,6 +510,14 @@ async function init() {
   });
 
   document.getElementById('save-settings-btn').addEventListener('click', saveAppSettings);
+  document.querySelectorAll('.reveal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.textContent = input.type === 'password' ? '👁' : '🙈';
+    });
+  });
+
   document.getElementById('backup-btn').addEventListener('click', downloadBackup);
   document.getElementById('restore-input').addEventListener('change', e => {
     const file = e.target.files[0];

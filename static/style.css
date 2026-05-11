@@ -321,6 +321,25 @@ body {
 /* ── Settings Form ── */
 .settings-form { display: flex; flex-direction: column; gap: 20px; }
 .settings-form .field { max-width: 300px; }
+.password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-wrap input { padding-right: 32px; }
+.reveal-btn {
+  position: absolute;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-muted);
+  padding: 0;
+  line-height: 1;
+}
+.reveal-btn:hover { color: var(--text-primary); }
+
 .backup-secrets-label {
   display: flex;
   align-items: center;
