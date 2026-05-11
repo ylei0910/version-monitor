@@ -364,6 +364,21 @@ body {
   border-color: var(--green);
 }
 
+.backup-popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  z-index: 300;
+  min-width: 200px;
+}
+.backup-popover.open { display: block; }
+
 .backup-secrets-label {
   display: flex;
   align-items: center;

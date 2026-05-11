@@ -420,9 +420,23 @@ async function deleteService(name) {
 
 // ── App settings save ──────────────────────────────────────────────────────
 
+let pendingRestoreFile = null;
+
+function toggleBackupPopover(e) {
+  e.stopPropagation();
+  document.getElementById('restore-popover').classList.remove('open');
+  document.getElementById('backup-popover').classList.toggle('open');
+}
+
+function toggleRestorePopover(e) {
+  e.stopPropagation();
+  document.getElementById('backup-popover').classList.remove('open');
+  document.getElementById('restore-popover').classList.toggle('open');
+}
+
 async function downloadBackup() {
   const includeSecrets = document.getElementById('backup-secrets-cb').checked;
-  if (includeSecrets && !confirm('The backup will contain your Telegram and GitHub tokens. Keep this file secure.\n\nContinue?')) return;
+  document.getElementById('backup-popover').classList.remove('open');
   try {
     const res = await fetch(`/api/backup?include_secrets=${includeSecrets}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -442,8 +456,11 @@ async function downloadBackup() {
   }
 }
 
-async function restoreBackup(file) {
-  if (!confirm(`Restore from "${file.name}"? This will overwrite your current services, versions, and settings.`)) return;
+async function restoreBackup() {
+  if (!pendingRestoreFile) return;
+  const file = pendingRestoreFile;
+  document.getElementById('restore-popover').classList.remove('open');
+  pendingRestoreFile = null;
   try {
     const text = await file.text();
     const data = JSON.parse(text);
@@ -453,11 +470,10 @@ async function restoreBackup(file) {
       body: JSON.stringify(data),
     });
     showToast('Restore complete');
-    await loadConfig();
-    await loadServices();
     const configData = await apiFetch('/api/config');
     populateServicesTable(configData);
     document.getElementById('setting-interval').value = configData.settings.github_check_interval_minutes;
+    await loadServices();
   } catch (e) {
     showToast(`Restore failed: ${e.message}`, 'error');
   }
@@ -524,10 +540,27 @@ async function init() {
     });
   });
 
-  document.getElementById('backup-btn').addEventListener('click', downloadBackup);
+  document.getElementById('backup-btn').addEventListener('click', toggleBackupPopover);
+  document.getElementById('backup-download-btn').addEventListener('click', downloadBackup);
+  document.getElementById('restore-btn').addEventListener('click', toggleRestorePopover);
   document.getElementById('restore-input').addEventListener('change', e => {
     const file = e.target.files[0];
-    if (file) { restoreBackup(file); e.target.value = ''; }
+    if (!file) return;
+    pendingRestoreFile = file;
+    const nameEl = document.getElementById('restore-filename');
+    nameEl.textContent = file.name;
+    nameEl.style.display = 'block';
+    document.getElementById('restore-confirm-btn').disabled = false;
+    e.target.value = '';
+  });
+  document.getElementById('restore-confirm-btn').addEventListener('click', restoreBackup);
+  document.addEventListener('click', e => {
+    for (const id of ['backup-popover', 'restore-popover']) {
+      const popover = document.getElementById(id);
+      if (popover.classList.contains('open') && !popover.parentElement.contains(e.target)) {
+        popover.classList.remove('open');
+      }
+    }
   });
 }
 
