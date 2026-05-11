@@ -76,9 +76,9 @@ if [ ! -f "${INSTALL_DIR}/.env" ]; then
 else
     echo "    .env already exists, skipping."
 fi
-# root owns, vmonitor can read — secrets not world-readable
+# root owns, vmonitor can read+write — app needs to update .env via UI
 chown root:"${SERVICE_USER}" "${INSTALL_DIR}/.env"
-chmod 640 "${INSTALL_DIR}/.env"
+chmod 660 "${INSTALL_DIR}/.env"
 
 if [ ! -f "${INSTALL_DIR}/services.yaml" ]; then
     cp "${INSTALL_DIR}/services.yaml.example" "${INSTALL_DIR}/services.yaml"
