@@ -334,6 +334,10 @@ body {
   border-color: var(--accent);
   z-index: 1;
 }
+.password-wrap input:focus + .reveal-btn {
+  border-color: var(--accent);
+  border-left-color: var(--border);
+}
 .reveal-btn {
   display: flex;
   align-items: center;
