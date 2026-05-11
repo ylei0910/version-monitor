@@ -7,6 +7,7 @@ const LS_CUSTOM_ORDER = 'vm_custom_order';
 let configMeta = {}; // name → { has_version_url, has_github, github, ... }
 let editingService = null; // name of service being edited in the form, or null for add
 let customOrder = JSON.parse(localStorage.getItem(LS_CUSTOM_ORDER) || 'null') || []; // names in user-defined order
+let lastServices = []; // cached last API response for instant re-sort
 
 // ── Utilities ──────────────────────────────────────────────────────────────
 
@@ -110,17 +111,14 @@ async function loadServices() {
     }
   }
 
+  lastServices = data.services;
+
   // Render each service
   for (const svc of data.services) {
     renderCard(svc);
   }
 
-  // Reorder DOM to match sort
-  const sorted = sortServices(data.services);
-  for (const svc of sorted) {
-    const card = grid.querySelector(`[data-name="${CSS.escape(svc.name)}"]`);
-    if (card) grid.appendChild(card);
-  }
+  applySortToGrid();
 
   document.getElementById('last-updated').textContent = formatDate(data.last_updated);
   document.getElementById('last-github-fetch').textContent = data.last_github_fetch
@@ -167,6 +165,15 @@ function sortServices(services) {
     });
   }
   return services; // default — API order
+}
+
+function applySortToGrid() {
+  const grid = document.getElementById('services-grid');
+  const sorted = sortServices(lastServices);
+  for (const svc of sorted) {
+    const card = grid.querySelector(`[data-name="${CSS.escape(svc.name)}"]`);
+    if (card) grid.appendChild(card);
+  }
 }
 
 // ── Card rendering ─────────────────────────────────────────────────────────
@@ -400,6 +407,7 @@ function populateServicesTable(configData) {
       else tr.before(dragSrc);
       const newOrder = [...tbody.querySelectorAll('tr')].map(r => r.dataset.name);
       saveCustomOrder(newOrder);
+      if (currentSort() === 'custom') applySortToGrid();
     });
     tr.addEventListener('dragend', () => {
       tbody.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
@@ -685,9 +693,9 @@ async function init() {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
-  document.getElementById('sort-select').addEventListener('change', async e => {
+  document.getElementById('sort-select').addEventListener('change', e => {
     localStorage.setItem(LS_SORT, e.target.value);
-    try { await loadServices(); } catch { /* silent */ }
+    applySortToGrid();
   });
 
   document.getElementById('add-service-btn').addEventListener('click', () => openServiceForm(null));
