@@ -257,6 +257,12 @@ function switchTab(tabId) {
 }
 
 function populateServicesTable(configData) {
+  // Keep configMeta in sync — stale configMeta causes services to be omitted from the next save payload
+  configMeta = {};
+  for (const svc of configData.services) {
+    configMeta[svc.name] = svc;
+  }
+
   const tbody = document.getElementById('services-table-body');
   tbody.innerHTML = '';
 
