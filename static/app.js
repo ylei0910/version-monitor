@@ -380,8 +380,9 @@ function populateServicesTable(configData) {
     } else {
       sourceHtml = `<span class="badge manual">manual</span>`;
     }
-    const authBadge = svc.has_basic_auth
-      ? `<span title="Basic auth configured" style="color:var(--text-muted);display:inline-flex;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
+    const authTitle = svc.has_auth_header ? 'Authorization header configured' : svc.has_basic_auth ? 'Basic auth configured' : '';
+    const authBadge = (svc.has_basic_auth || svc.has_auth_header)
+      ? `<span title="${authTitle}" style="color:var(--text-muted);display:inline-flex;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
       : '';
 
     tr.innerHTML = `
@@ -453,7 +454,7 @@ function hideServiceForm() {
 }
 
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-latest-regex', 'sf-basic-auth'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-latest-regex', 'sf-basic-auth', 'sf-auth-header'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'manual';
@@ -489,6 +490,7 @@ function openServiceForm(nameToEdit) {
     const authField = document.getElementById('sf-basic-auth');
     authField.value = svc.basic_auth ?? '';
     authField.placeholder = 'username:password';
+    document.getElementById('sf-auth-header').value = svc.auth_header ?? '';
     if (!svc.version_url) {
       document.getElementById('sf-version-type').value = 'manual';
       toggleVersionTypeFields('manual');
@@ -536,13 +538,15 @@ async function saveServiceForm() {
     : null;
   const latest_regex = document.getElementById('sf-latest-regex').value.trim() || null;
   const basic_auth = vtype === 'manual' ? null : (document.getElementById('sf-basic-auth').value.trim() || null);
+  const auth_header = vtype === 'manual' ? null : (document.getElementById('sf-auth-header').value.trim() || null);
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
     ...(version_key && { version_key }), ...(version_template && { version_template }),
     ...(version_metric && { version_metric }), ...(version_label && { version_label }),
     ...(version_regex && { version_regex }),
     ...(latest_regex && { latest_regex }),
-    ...(basic_auth && { basic_auth }) };
+    ...(basic_auth && { basic_auth }),
+    ...(auth_header && { auth_header }) };
 
   // Build updated list
   let services = Object.values(configMeta).map(s => ({

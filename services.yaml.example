@@ -19,3 +19,10 @@ services:
     version_metric: "cs_info"               # matches: cs_info{version="v1.2.3-build"} 0
     # version_label: "version"              # optional, defaults to "version"
     # version_regex: "v?(\\d+\\.\\d+\\.\\d+)"  # optional: trim build suffix → "1.2.3"
+
+  - name: ProtectedApp
+    github: org/protectedapp
+    version_url: "http://192.168.1.13:9000/api/version"
+    version_key: "version"
+    auth_header: "Bearer mytoken123"        # full Authorization header value
+    # basic_auth: "admin:secret"            # alternative: HTTP Basic Auth (user:pass)

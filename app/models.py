@@ -17,6 +17,7 @@ class ServiceConfig(BaseModel):
     version_regex: Optional[str] = None   # regex applied to installed version
     latest_regex: Optional[str] = None    # regex applied to latest version from GitHub
     basic_auth: Optional[str] = None  # "username:password"
+    auth_header: Optional[str] = None  # raw Authorization header value, e.g. "Bearer <token>"
 
 
 class ServiceStatus(BaseModel):
@@ -64,7 +65,9 @@ class ConfigServiceMeta(BaseModel):
     has_version_url: bool
     has_github: bool
     has_basic_auth: bool
+    has_auth_header: bool
     basic_auth: Optional[str] = None
+    auth_header: Optional[str] = None
 
 
 class AppSettings(BaseModel):

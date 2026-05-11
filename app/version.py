@@ -62,18 +62,22 @@ async def fetch_installed_version(
     version_template: Optional[str],
     client: httpx.AsyncClient,
     basic_auth: Optional[str] = None,
+    auth_header: Optional[str] = None,
     version_metric: Optional[str] = None,
     version_label: Optional[str] = None,
     version_regex: Optional[str] = None,
 ) -> tuple[Optional[str], Optional[str]]:
     """Return (version, error)."""
     auth = None
-    if basic_auth and ":" in basic_auth:
+    headers: dict[str, str] = {}
+    if auth_header:
+        headers["Authorization"] = auth_header
+    elif basic_auth and ":" in basic_auth:
         username, _, password = basic_auth.partition(":")
         auth = (username, password)
 
     try:
-        resp = await client.get(version_url, auth=auth)
+        resp = await client.get(version_url, auth=auth, headers=headers)
     except (httpx.ConnectError, httpx.TimeoutException) as e:
         return None, f"unreachable ({type(e).__name__})"
     except Exception as e:

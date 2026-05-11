@@ -90,6 +90,7 @@ async def _build_service_statuses() -> list[ServiceStatus]:
             fetched, err = await fetch_installed_version(
                 svc.version_url, svc.version_key, svc.version_template, _http_client,
                 basic_auth=svc.basic_auth,
+                auth_header=svc.auth_header,
                 version_metric=svc.version_metric,
                 version_label=svc.version_label,
                 version_regex=svc.version_regex,
@@ -247,7 +248,9 @@ async def get_config():
             has_version_url=svc.version_url is not None,
             has_github=svc.github is not None,
             has_basic_auth=svc.basic_auth is not None,
+            has_auth_header=svc.auth_header is not None,
             basic_auth=svc.basic_auth,
+            auth_header=svc.auth_header,
         )
         for svc in services
     ]
@@ -272,11 +275,14 @@ async def update_services(body: UpdateServicesRequest):
     if len(names) != len(set(names)):
         raise HTTPException(status_code=422, detail="Duplicate service names")
 
-    # Preserve basic_auth from existing config — it is never sent via the UI
+    # Preserve auth fields from existing config — they are sent back via the UI on edit
     async with _config_lock:
-        existing = {svc.name: svc.basic_auth for svc in _config.services}
+        existing = {svc.name: svc for svc in _config.services}
     merged = [
-        svc.model_copy(update={"basic_auth": svc.basic_auth or existing.get(svc.name)})
+        svc.model_copy(update={
+            "basic_auth": svc.basic_auth or (existing[svc.name].basic_auth if svc.name in existing else None),
+            "auth_header": svc.auth_header or (existing[svc.name].auth_header if svc.name in existing else None),
+        })
         for svc in body.services
     ]
 
