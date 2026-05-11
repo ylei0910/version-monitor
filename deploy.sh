@@ -13,7 +13,7 @@ echo "==> Installing/updating Python dependencies..."
 ./venv/bin/pip install -q -r requirements.txt
 
 echo "==> Restarting service..."
-sudo systemctl restart version-monitor
+systemctl restart version-monitor
 
 echo "==> Done on $(hostname). Service status:"
-sudo systemctl status version-monitor --no-pager --lines=0
+systemctl status version-monitor --no-pager --lines=0

@@ -26,7 +26,7 @@ GITHUB_REPO="ylei0910/version-monitor"
 # ── 1. System dependencies ────────────────────────────────────────────────────
 echo "==> Installing system dependencies..."
 apt-get update -qq
-apt-get install -y python3 python3-pip python3-venv git curl
+apt-get install -y python3 python3-pip python3-venv git curl sudo
 
 # ── 2. Dedicated user ────────────────────────────────────────────────────────
 echo "==> Ensuring user '${SERVICE_USER}' exists..."
@@ -83,16 +83,7 @@ else
     echo "    services.yaml already exists, skipping."
 fi
 
-# ── 7. Sudoers rule (idempotent — always written, content is deterministic) ──
-echo "==> Configuring sudoers for service management..."
-mkdir -p /etc/sudoers.d
-SUDOERS_FILE="/etc/sudoers.d/vmonitor-service"
-cat > "${SUDOERS_FILE}" <<EOF
-# Allow vmonitor to restart/status the version-monitor service (for CI/CD runner)
-vmonitor ALL=(ALL) NOPASSWD: /bin/systemctl restart version-monitor
-vmonitor ALL=(ALL) NOPASSWD: /bin/systemctl status version-monitor
-EOF
-chmod 440 "${SUDOERS_FILE}"
+# ── 7. (no sudoers needed — runner runs as root with RUNNER_ALLOW_RUNASROOT=1) ──
 
 # ── 8. Systemd app service ───────────────────────────────────────────────────
 echo "==> Installing systemd service..."
@@ -150,12 +141,21 @@ if [ -n "${RUNNER_TOKEN}" ]; then
 
     if [ -n "${RUNNER_SVC_NAME}" ]; then
         echo "    Runner service already installed — restarting..."
+        # Ensure RUNNER_ALLOW_RUNASROOT is set (idempotent)
+        if ! grep -q "RUNNER_ALLOW_RUNASROOT" "/etc/systemd/system/${RUNNER_SVC_NAME}" 2>/dev/null; then
+            sed -i '/\[Service\]/a Environment=RUNNER_ALLOW_RUNASROOT=1' "/etc/systemd/system/${RUNNER_SVC_NAME}"
+            systemctl daemon-reload
+        fi
         systemctl restart "${RUNNER_SVC_NAME}"
     else
-        echo "    Installing runner as systemd service..."
+        echo "    Installing runner as systemd service (runs as root)..."
         # svc.sh must be run from within the runner directory
         pushd "${RUNNER_DIR}" > /dev/null
-        ./svc.sh install "${SERVICE_USER}"
+        ./svc.sh install root
+        # Allow runner to run as root
+        RUNNER_SVC_NEW=$(ls /etc/systemd/system/actions.runner.*.service | head -1)
+        sed -i '/\[Service\]/a Environment=RUNNER_ALLOW_RUNASROOT=1' "${RUNNER_SVC_NEW}"
+        systemctl daemon-reload
         ./svc.sh start
         popd > /dev/null
     fi
