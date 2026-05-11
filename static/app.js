@@ -198,6 +198,8 @@ function startInlineEdit(el, serviceName) {
     if (saved) return;
     saved = true;
     const newVersion = input.value.trim();
+    // Remove input immediately so renderCard sees isEditing=false and restores the ✎ icon
+    input.remove();
     if (newVersion && newVersion !== currentValue) {
       try {
         await saveVersion(serviceName, newVersion);
@@ -210,7 +212,7 @@ function startInlineEdit(el, serviceName) {
 
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter') commitEdit();
-    if (e.key === 'Escape') { saved = true; loadServices(); }
+    if (e.key === 'Escape') { saved = true; input.remove(); loadServices(); }
   });
   input.addEventListener('blur', commitEdit);
 }
