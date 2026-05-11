@@ -398,12 +398,18 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 16px;
   box-shadow: var(--shadow);
   z-index: 300;
-  min-width: 200px;
+  min-width: 220px;
 }
-.backup-popover.open { display: block; }
+.backup-popover.open { display: flex; flex-direction: column; gap: 10px; }
+
+.popover-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+}
 
 .backup-secrets-label {
   display: flex;
