@@ -513,8 +513,9 @@ async function init() {
   document.querySelectorAll('.reveal-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const input = document.getElementById(btn.dataset.target);
-      input.type = input.type === 'password' ? 'text' : 'password';
-      btn.textContent = input.type === 'password' ? '👁' : '🙈';
+      const isRevealed = input.type === 'text';
+      input.type = isRevealed ? 'password' : 'text';
+      btn.classList.toggle('active', !isRevealed);
     });
   });
 

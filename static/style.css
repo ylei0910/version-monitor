@@ -322,23 +322,42 @@ body {
 .settings-form { display: flex; flex-direction: column; gap: 20px; }
 .settings-form .field { max-width: 300px; }
 .password-wrap {
-  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.password-wrap input {
+  flex: 1;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-right: none;
+}
+.password-wrap input:focus {
+  border-color: var(--accent);
+  z-index: 1;
+}
+.reveal-btn {
   display: flex;
   align-items: center;
-}
-.password-wrap input { padding-right: 32px; }
-.reveal-btn {
-  position: absolute;
-  right: 6px;
-  background: none;
-  border: none;
+  justify-content: center;
+  width: 42px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   cursor: pointer;
-  font-size: 14px;
   color: var(--text-muted);
-  padding: 0;
-  line-height: 1;
+  font-size: 15px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
 }
-.reveal-btn:hover { color: var(--text-primary); }
+.reveal-btn:hover {
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--bg-card-hover);
+}
+.reveal-btn.active {
+  color: var(--green);
+  border-color: var(--green);
+}
 
 .backup-secrets-label {
   display: flex;
