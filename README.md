@@ -89,7 +89,7 @@ The script will:
 - Install Python and git
 - Create a `vmonitor` system user
 - Set up a virtualenv at `/opt/version-monitor/venv`
-- Generate an SSH keypair and print the public key for CI/CD
+- Register a self-hosted GitHub Actions runner (if `RUNNER_TOKEN` is provided)
 - Install and enable the systemd service on port **8080**
 
 View logs:
