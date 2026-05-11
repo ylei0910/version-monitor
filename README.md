@@ -72,17 +72,19 @@ Open [http://localhost:8080](http://localhost:8080).
 
 ## Proxmox LXC / Debian Install
 
-Run as root on the LXC:
+Run as root on the LXC. **Recommended** — include your runner token to set up CI/CD in the same step:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ylei0910/version-monitor/main/setup.sh | bash
-```
-
-With optional environment variables:
-
-```bash
+# Recommended: register GitHub Actions runner during setup
 curl -sL https://raw.githubusercontent.com/ylei0910/version-monitor/main/setup.sh \
   | RUNNER_TOKEN=<token> RUNNER_LABEL=lxc-home bash
+```
+
+Get the token from: **GitHub repo → Settings → Actions → Runners → New self-hosted runner**
+
+```bash
+# Without runner registration (manual setup later)
+curl -sL https://raw.githubusercontent.com/ylei0910/version-monitor/main/setup.sh | bash
 ```
 
 The script will:
@@ -111,8 +113,7 @@ Deployment uses **self-hosted runners** — the runner process on each LXC polls
 
 ### Setup
 
-1. Run `setup.sh` on each LXC (see [Proxmox LXC / Debian Install](#proxmox-lxc--debian-install)).  
-   Supply a registration token to register the runner automatically:
+1. Run `setup.sh` on each LXC with a runner token (see [Proxmox LXC / Debian Install](#proxmox-lxc--debian-install)):
    ```bash
    curl -sL https://raw.githubusercontent.com/ylei0910/version-monitor/main/setup.sh \
      | RUNNER_TOKEN=<token_from_github> RUNNER_LABEL=lxc-home bash
