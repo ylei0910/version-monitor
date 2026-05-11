@@ -171,6 +171,28 @@
     <div class="tab-panel" id="tab-settings">
       <div class="settings-form">
         <div class="field">
+          <label>Telegram Bot Token</label>
+          <div class="password-wrap">
+            <input id="setting-telegram-token" type="password" placeholder="Not configured" autocomplete="off">
+            <button type="button" class="reveal-btn" data-target="setting-telegram-token" title="Show/hide">
+              <svg class="eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+              <svg class="eye-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="hint">Leave blank to keep current value. Status: <span id="telegram-token-status" class="status-badge"></span></div>
+        </div>
+        <div class="field">
+          <label>Telegram Chat ID</label>
+          <input id="setting-telegram-chat-id" type="text" placeholder="Not configured" autocomplete="off">
+          <div class="hint">Leave blank to keep current value. Status: <span id="telegram-chat-status" class="status-badge"></span></div>
+        </div>
+        <div class="field">
           <label>Check Interval (minutes)</label>
           <input id="setting-interval" type="number" min="0" step="1" placeholder="1440">
           <div class="hint">How often to fetch latest versions and send notifications. Set to 0 to disable the scheduler.</div>
@@ -179,8 +201,7 @@
           <button class="btn btn-primary" id="save-settings-btn">Save Settings</button>
         </div>
         <div class="secret-note">
-          <strong>Telegram &amp; GitHub tokens</strong> are stored in <code>.env</code>
-          on the server and are not configurable here. Use the Backup/Restore buttons to migrate them.
+          <strong>GitHub token</strong> is stored in <code>.env</code> on the server and is not configurable here.
         </div>
       </div>
     </div>

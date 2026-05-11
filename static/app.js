@@ -55,6 +55,17 @@ async function loadConfig() {
   // Populate settings form
   const intervalInput = document.getElementById('setting-interval');
   if (intervalInput) intervalInput.value = data.settings.github_check_interval_minutes;
+
+  const tokenStatus = document.getElementById('telegram-token-status');
+  if (tokenStatus) {
+    tokenStatus.textContent = data.settings.has_telegram_token ? 'Configured' : 'Not set';
+    tokenStatus.className = 'status-badge ' + (data.settings.has_telegram_token ? 'configured' : 'missing');
+  }
+  const chatStatus = document.getElementById('telegram-chat-status');
+  if (chatStatus) {
+    chatStatus.textContent = data.settings.has_telegram_chat_id ? 'Configured' : 'Not set';
+    chatStatus.className = 'status-badge ' + (data.settings.has_telegram_chat_id ? 'configured' : 'missing');
+  }
   return data;
 }
 
@@ -495,13 +506,22 @@ async function saveAppSettings() {
     showToast('Interval must be 0 or greater', 'error');
     return;
   }
+  const telegramToken = document.getElementById('setting-telegram-token').value.trim() || null;
+  const telegramChatId = document.getElementById('setting-telegram-chat-id').value.trim() || null;
   try {
     await apiFetch('/api/config/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ github_check_interval_minutes: intervalVal }),
+      body: JSON.stringify({
+        github_check_interval_minutes: intervalVal,
+        ...(telegramToken && { telegram_bot_token: telegramToken }),
+        ...(telegramChatId && { telegram_chat_id: telegramChatId }),
+      }),
     });
-    showToast(`Settings saved — interval: ${intervalVal === 0 ? 'disabled' : intervalVal + ' min'}`);
+    document.getElementById('setting-telegram-token').value = '';
+    document.getElementById('setting-telegram-chat-id').value = '';
+    await loadConfig();
+    showToast(`Settings saved`);
   } catch (e) {
     showToast(`Failed to save: ${e.message}`, 'error');
   }

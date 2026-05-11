@@ -343,7 +343,10 @@ body {
 
 /* ── Settings Form ── */
 .settings-form { display: flex; flex-direction: column; gap: 20px; }
-.settings-form .field { max-width: 300px; }
+.settings-form .field { max-width: 400px; }
+.status-badge { font-weight: 500; }
+.status-badge.configured { color: var(--green); }
+.status-badge.missing { color: var(--yellow); }
 .password-wrap {
   display: flex;
   align-items: stretch;

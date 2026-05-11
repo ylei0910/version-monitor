@@ -50,6 +50,8 @@ async def send_telegram_notification(
     client: httpx.AsyncClient,
 ) -> tuple[bool, Optional[str]]:
     """Return (sent, message_text_or_error)."""
+    if not bot_token or not chat_id:
+        return False, "Telegram not configured — set Bot Token and Chat ID in Settings"
     if not outdated and not errors:
         return False, None
 

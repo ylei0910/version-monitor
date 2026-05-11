@@ -68,8 +68,9 @@ def load_config() -> AppConfig:
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 
     if not bot_token or not chat_id:
-        raise RuntimeError(
-            "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set in .env"
+        logger.warning(
+            "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set — "
+            "notifications disabled until configured via Settings or Restore"
         )
 
     interval_raw = os.environ.get("GITHUB_CHECK_INTERVAL_MINUTES", "1440").strip()

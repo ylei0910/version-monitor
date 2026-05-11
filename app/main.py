@@ -224,6 +224,8 @@ async def get_config():
         settings=AppSettings(
             github_check_interval_minutes=interval,
             scheduler_enabled=interval > 0,
+            has_telegram_token=bool(_config.telegram_bot_token),
+            has_telegram_chat_id=bool(_config.telegram_chat_id),
         ),
     )
 
@@ -294,6 +296,24 @@ async def update_settings(body: UpdateSettingsRequest):
 
     if _scheduler:
         reschedule(_scheduler, _config, _run_check_and_notify)
+
+    if body.telegram_bot_token or body.telegram_chat_id:
+        async with _config_lock:
+            new_token = body.telegram_bot_token or _config.telegram_bot_token
+            new_chat_id = body.telegram_chat_id or _config.telegram_chat_id
+        try:
+            save_secrets(
+                telegram_bot_token=new_token or "",
+                telegram_chat_id=new_chat_id or "",
+                github_token=None,
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to save credentials: {e}")
+        async with _config_lock:
+            if body.telegram_bot_token:
+                _config.telegram_bot_token = body.telegram_bot_token
+            if body.telegram_chat_id:
+                _config.telegram_chat_id = body.telegram_chat_id
 
     return await get_config()
 
