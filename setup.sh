@@ -47,8 +47,11 @@ if [ -n "${REPO_URL}" ]; then
         git clone "${REPO_URL}" "${INSTALL_DIR}"
     fi
 fi
-# Repo owned by root — runner and deploy also run as root, no ownership conflict
+# Repo owned by root; directory writable by vmonitor so the app can write
+# services.yaml and its temp file without root privileges
 chown -R root:root "${INSTALL_DIR}"
+chown root:"${SERVICE_USER}" "${INSTALL_DIR}"
+chmod 775 "${INSTALL_DIR}"
 
 # ── 4. Python virtual environment ────────────────────────────────────────────
 echo "==> Setting up Python virtual environment..."
