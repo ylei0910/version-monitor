@@ -85,6 +85,7 @@ fi
 
 # ── 7. Sudoers rule (idempotent — always written, content is deterministic) ──
 echo "==> Configuring sudoers for service management..."
+mkdir -p /etc/sudoers.d
 SUDOERS_FILE="/etc/sudoers.d/vmonitor-service"
 cat > "${SUDOERS_FILE}" <<EOF
 # Allow vmonitor to restart/status the version-monitor service (for CI/CD runner)
