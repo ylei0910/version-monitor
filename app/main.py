@@ -62,8 +62,8 @@ _config_lock = asyncio.Lock()
 
 def _compare_versions(installed: str, latest: str) -> bool:
     """Return True if installed >= latest (up to date)."""
-    a = installed.lstrip("v").strip()
-    b = latest.lstrip("v").strip()
+    a = installed.strip()
+    b = latest.strip()
     try:
         return PkgVersion(a) >= PkgVersion(b)
     except InvalidVersion:
