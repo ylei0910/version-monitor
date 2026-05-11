@@ -1,9 +1,12 @@
 'use strict';
 
 const REFRESH_INTERVAL = 60_000;
+const LS_SORT = 'vm_sort';
+const LS_CUSTOM_ORDER = 'vm_custom_order';
 
 let configMeta = {}; // name → { has_version_url, has_github, github, ... }
 let editingService = null; // name of service being edited in the form, or null for add
+let customOrder = JSON.parse(localStorage.getItem(LS_CUSTOM_ORDER) || 'null') || []; // names in user-defined order
 
 // ── Utilities ──────────────────────────────────────────────────────────────
 
@@ -112,6 +115,13 @@ async function loadServices() {
     renderCard(svc);
   }
 
+  // Reorder DOM to match sort
+  const sorted = sortServices(data.services);
+  for (const svc of sorted) {
+    const card = grid.querySelector(`[data-name="${CSS.escape(svc.name)}"]`);
+    if (card) grid.appendChild(card);
+  }
+
   document.getElementById('last-updated').textContent = formatDate(data.last_updated);
   document.getElementById('last-github-fetch').textContent = data.last_github_fetch
     ? formatDate(data.last_github_fetch)
@@ -125,6 +135,38 @@ async function saveVersion(name, version) {
     body: JSON.stringify({ version }),
   });
   showToast(`Saved version for ${name}`);
+}
+
+// ── Sorting ────────────────────────────────────────────────────────────────
+
+function currentSort() {
+  return localStorage.getItem(LS_SORT) || 'default';
+}
+
+function saveCustomOrder(names) {
+  customOrder = names;
+  localStorage.setItem(LS_CUSTOM_ORDER, JSON.stringify(names));
+}
+
+function sortServices(services) {
+  const mode = currentSort();
+  if (mode === 'name') {
+    return [...services].sort((a, b) => a.name.localeCompare(b.name));
+  }
+  if (mode === 'status') {
+    const rank = svc => svc.is_up_to_date === false ? 0 : svc.is_up_to_date === null ? 1 : 2;
+    return [...services].sort((a, b) => rank(a) - rank(b));
+  }
+  if (mode === 'custom' && customOrder.length) {
+    return [...services].sort((a, b) => {
+      const ia = customOrder.indexOf(a.name);
+      const ib = customOrder.indexOf(b.name);
+      const ra = ia === -1 ? Infinity : ia;
+      const rb = ib === -1 ? Infinity : ib;
+      return ra - rb;
+    });
+  }
+  return services; // default — API order
 }
 
 // ── Card rendering ─────────────────────────────────────────────────────────
@@ -289,8 +331,19 @@ function populateServicesTable(configData) {
   const tbody = document.getElementById('services-table-body');
   tbody.innerHTML = '';
 
-  for (const svc of configData.services) {
+  // Show services in custom order if set, else config order
+  const displayOrder = customOrder.length
+    ? [...configData.services].sort((a, b) => {
+        const ia = customOrder.indexOf(a.name);
+        const ib = customOrder.indexOf(b.name);
+        return (ia === -1 ? Infinity : ia) - (ib === -1 ? Infinity : ib);
+      })
+    : configData.services;
+
+  for (const svc of displayOrder) {
     const tr = document.createElement('tr');
+    tr.draggable = true;
+    tr.dataset.name = svc.name;
     let sourceHtml, sourceTitle = '';
     if (svc.version_metric) {
       sourceHtml = `<span class="badge" title="${escapeHtml(svc.version_metric)}.${escapeHtml(svc.version_label || 'version')}">metrics</span>`;
@@ -309,6 +362,7 @@ function populateServicesTable(configData) {
       : '';
 
     tr.innerHTML = `
+      <td><span class="drag-handle" title="Drag to reorder">⠿</span></td>
       <td><strong>${escapeHtml(svc.name)}</strong></td>
       <td class="text-muted">${escapeHtml(svc.github ?? '—')}</td>
       <td><div class="source-cell">${sourceHtml}${authBadge}</div></td>
@@ -321,6 +375,36 @@ function populateServicesTable(configData) {
     `;
     tbody.appendChild(tr);
   }
+
+  // Drag-and-drop reordering
+  let dragSrc = null;
+  tbody.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('dragstart', e => {
+      dragSrc = tr;
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    tr.addEventListener('dragover', e => {
+      e.preventDefault();
+      tbody.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
+      if (tr !== dragSrc) tr.classList.add('drag-over');
+    });
+    tr.addEventListener('dragleave', () => tr.classList.remove('drag-over'));
+    tr.addEventListener('drop', e => {
+      e.preventDefault();
+      tr.classList.remove('drag-over');
+      if (!dragSrc || dragSrc === tr) return;
+      const rows = [...tbody.querySelectorAll('tr')];
+      const fromIdx = rows.indexOf(dragSrc);
+      const toIdx = rows.indexOf(tr);
+      if (fromIdx < toIdx) tr.after(dragSrc);
+      else tr.before(dragSrc);
+      const newOrder = [...tbody.querySelectorAll('tr')].map(r => r.dataset.name);
+      saveCustomOrder(newOrder);
+    });
+    tr.addEventListener('dragend', () => {
+      tbody.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
+    });
+  });
 
   tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
     btn.addEventListener('click', () => openServiceForm(btn.dataset.name));
@@ -575,6 +659,10 @@ async function saveAppSettings() {
 // ── Init ───────────────────────────────────────────────────────────────────
 
 async function init() {
+  // Restore saved sort
+  const savedSort = localStorage.getItem(LS_SORT) || 'default';
+  document.getElementById('sort-select').value = savedSort;
+
   try {
     await loadConfig();
     await loadServices();
@@ -595,6 +683,11 @@ async function init() {
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  document.getElementById('sort-select').addEventListener('change', async e => {
+    localStorage.setItem(LS_SORT, e.target.value);
+    try { await loadServices(); } catch { /* silent */ }
   });
 
   document.getElementById('add-service-btn').addEventListener('click', () => openServiceForm(null));

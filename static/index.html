@@ -31,6 +31,15 @@
     <span class="status-label">Latest checked</span>
     <span class="status-value" id="last-github-fetch">—</span>
   </div>
+  <div class="status-item sort-item">
+    <span class="status-label">Sort</span>
+    <select id="sort-select" class="sort-select">
+      <option value="default">Default</option>
+      <option value="name">Name A→Z</option>
+      <option value="status">Status</option>
+      <option value="custom">Custom</option>
+    </select>
+  </div>
 </div>
 
 <main>
@@ -96,6 +105,7 @@
       <table class="services-table" id="services-table">
         <thead>
           <tr>
+            <th class="drag-col"></th>
             <th>Name</th>
             <th>GitHub</th>
             <th>Version Source</th>

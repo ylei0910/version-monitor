@@ -55,7 +55,20 @@ body {
   padding: 5px 20px;
   display: flex;
   gap: 24px;
+  align-items: center;
 }
+.sort-item { margin-left: auto; }
+.sort-select {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+}
+.sort-select:focus { border-color: var(--accent); }
 
 .status-item {
   display: flex;
@@ -285,6 +298,17 @@ body {
 
 /* ── Services Table ── */
 .services-table { width: 100%; border-collapse: collapse; }
+.drag-col { width: 24px; }
+.drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+  user-select: none;
+}
+.drag-handle:active { cursor: grabbing; }
+.services-table tr.drag-over td { border-top: 2px solid var(--accent); }
 .services-table th {
   text-align: left;
   color: var(--text-muted);
