@@ -42,7 +42,7 @@ echo "==> Setting up application directory..."
 if [ -n "${REPO_URL}" ]; then
     if [ -d "${INSTALL_DIR}/.git" ]; then
         echo "    Repository already cloned — pulling latest..."
-        sudo -u "${SERVICE_USER}" git -C "${INSTALL_DIR}" pull --ff-only
+        runuser -u "${SERVICE_USER}" -- git -C "${INSTALL_DIR}" pull --ff-only
     else
         git clone "${REPO_URL}" "${INSTALL_DIR}"
     fi
@@ -52,9 +52,9 @@ chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}"
 # ── 4. Python virtual environment ────────────────────────────────────────────
 echo "==> Setting up Python virtual environment..."
 # python3 -m venv is safe to re-run on an existing venv
-sudo -u "${SERVICE_USER}" python3 -m venv "${VENV_DIR}"
-sudo -u "${SERVICE_USER}" "${VENV_DIR}/bin/pip" install --quiet --upgrade pip
-sudo -u "${SERVICE_USER}" "${VENV_DIR}/bin/pip" install --quiet -r "${INSTALL_DIR}/requirements.txt"
+runuser -u "${SERVICE_USER}" -- python3 -m venv "${VENV_DIR}"
+runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/pip" install --quiet --upgrade pip
+runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/pip" install --quiet -r "${INSTALL_DIR}/requirements.txt"
 
 # ── 5. Data directory ────────────────────────────────────────────────────────
 echo "==> Ensuring data directory exists..."
@@ -123,10 +123,10 @@ if [ ! -f "${RUNNER_DIR}/run.sh" ]; then
     RUNNER_ARCH="x64"
     case "$(uname -m)" in arm64|aarch64) RUNNER_ARCH="arm64" ;; esac
     RUNNER_PKG="actions-runner-linux-${RUNNER_ARCH}-${RUNNER_LATEST}.tar.gz"
-    sudo -u "${SERVICE_USER}" curl -sL \
+    runuser -u "${SERVICE_USER}" -- curl -sL \
         "https://github.com/actions/runner/releases/download/v${RUNNER_LATEST}/${RUNNER_PKG}" \
         -o "/tmp/${RUNNER_PKG}"
-    sudo -u "${SERVICE_USER}" tar xzf "/tmp/${RUNNER_PKG}" -C "${RUNNER_DIR}"
+    runuser -u "${SERVICE_USER}" -- tar xzf "/tmp/${RUNNER_PKG}" -C "${RUNNER_DIR}"
     rm "/tmp/${RUNNER_PKG}"
 else
     echo "    Runner binaries already present, skipping download."
@@ -138,7 +138,7 @@ RUNNER_SVC_NAME=$(ls /etc/systemd/system/actions.runner.*.service 2>/dev/null | 
 if [ -n "${RUNNER_TOKEN}" ]; then
     echo "    Registering runner with label '${RUNNER_LABEL}'..."
     # --replace safely handles re-registration over an existing runner
-    sudo -u "${SERVICE_USER}" "${RUNNER_DIR}/config.sh" \
+    runuser -u "${SERVICE_USER}" -- "${RUNNER_DIR}/config.sh" \
         --url "https://github.com/${GITHUB_REPO}" \
         --token "${RUNNER_TOKEN}" \
         --name "$(hostname)" \
