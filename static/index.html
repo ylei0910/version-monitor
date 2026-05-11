@@ -114,7 +114,6 @@
             <tr>
               <th class="drag-col"></th>
               <th>Name</th>
-              <th>GitHub</th>
               <th>Version Source</th>
               <th></th>
             </tr>
@@ -236,6 +235,7 @@
     <!-- App Settings Tab -->
     <div class="tab-panel" id="tab-settings">
       <div class="settings-form">
+        <div class="settings-group-label">Telegram</div>
         <div class="field">
           <label>Telegram Bot Token</label>
           <div class="password-wrap">
@@ -258,6 +258,7 @@
           <input id="setting-telegram-chat-id" type="text" placeholder="" autocomplete="off">
           <div class="hint">Status: <span id="telegram-chat-status" class="status-badge"></span></div>
         </div>
+        <div class="settings-group-label">Scheduling</div>
         <div class="field">
           <label>GitHub check interval (minutes)</label>
           <input id="setting-interval" type="number" min="0" step="1" placeholder="1440">

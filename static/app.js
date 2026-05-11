@@ -367,16 +367,15 @@ function populateServicesTable(configData) {
     const tr = document.createElement('tr');
     tr.draggable = true;
     tr.dataset.name = svc.name;
-    let sourceHtml, sourceTitle = '';
+    let sourceHtml;
     if (svc.version_metric) {
-      sourceHtml = `<span class="badge" title="${escapeHtml(svc.version_metric)}.${escapeHtml(svc.version_label || 'version')}">metrics</span>`;
+      sourceHtml = `<span class="badge">metrics</span>`;
     } else if (svc.version_key) {
-      sourceHtml = `key: <code>${escapeHtml(svc.version_key)}</code>`;
+      sourceHtml = `<span class="badge">key</span>`;
     } else if (svc.version_template) {
-      sourceHtml = `<span class="badge" title="${escapeHtml(svc.version_template)}">template</span>`;
-      sourceTitle = svc.version_template;
+      sourceHtml = `<span class="badge">template</span>`;
     } else if (svc.version_url) {
-      sourceHtml = `<span class="text-muted">url</span>`;
+      sourceHtml = `<span class="badge">url</span>`;
     } else {
       sourceHtml = `<span class="badge manual">manual</span>`;
     }
@@ -388,7 +387,6 @@ function populateServicesTable(configData) {
     tr.innerHTML = `
       <td><span class="drag-handle" title="Drag to reorder">⠿</span></td>
       <td><strong>${escapeHtml(svc.name)}</strong></td>
-      <td class="text-muted">${escapeHtml(svc.github ?? '—')}</td>
       <td><div class="source-cell">${sourceHtml}${authBadge}</div></td>
       <td>
         <div class="td-actions">
