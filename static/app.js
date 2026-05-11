@@ -93,11 +93,10 @@ async function loadServices() {
     renderCard(svc);
   }
 
-  const updated = document.getElementById('last-updated');
-  const githubPart = data.last_github_fetch
-    ? ` · Latest checked ${formatDate(data.last_github_fetch)}`
-    : '';
-  updated.textContent = `Refreshed ${formatDate(data.last_updated)}${githubPart}`;
+  document.getElementById('last-updated').textContent = formatDate(data.last_updated);
+  document.getElementById('last-github-fetch').textContent = data.last_github_fetch
+    ? formatDate(data.last_github_fetch)
+    : '—';
 }
 
 async function saveVersion(name, version) {

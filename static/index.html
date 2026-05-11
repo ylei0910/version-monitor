@@ -11,7 +11,6 @@
 
 <header class="header">
   <h1>Version Monitor</h1>
-  <span class="header-meta" id="last-updated"></span>
   <button class="btn" id="notify-btn">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -21,6 +20,17 @@
   </button>
   <button class="btn btn-icon" id="settings-btn" title="Settings">&#9881;</button>
 </header>
+
+<div class="status-bar">
+  <div class="status-item">
+    <span class="status-label">UI refreshed</span>
+    <span class="status-value" id="last-updated">—</span>
+  </div>
+  <div class="status-item">
+    <span class="status-label">Latest checked</span>
+    <span class="status-value" id="last-github-fetch">—</span>
+  </div>
+</div>
 
 <main>
   <div id="services-grid"></div>

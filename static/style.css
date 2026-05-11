@@ -49,10 +49,31 @@ body {
   letter-spacing: -0.3px;
 }
 
-.header-meta {
+.status-bar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding: 5px 20px;
+  display: flex;
+  gap: 24px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.status-label {
   color: var(--text-muted);
-  font-size: 12px;
-  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 10px;
+}
+
+.status-value {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .btn {
