@@ -134,3 +134,38 @@ def save_setting_interval(minutes: int) -> None:
         f.writelines(new_lines)
 
     os.environ["GITHUB_CHECK_INTERVAL_MINUTES"] = str(minutes)
+
+
+def save_secrets(telegram_bot_token: str, telegram_chat_id: str, github_token: str | None) -> None:
+    """Update credential env vars in the .env file."""
+    updates = {
+        "TELEGRAM_BOT_TOKEN": telegram_bot_token,
+        "TELEGRAM_CHAT_ID": telegram_chat_id,
+    }
+    if github_token is not None:
+        updates["GITHUB_TOKEN"] = github_token
+
+    lines: list[str] = []
+    if ENV_FILE.exists():
+        with open(ENV_FILE) as f:
+            lines = f.readlines()
+
+    found = {k: False for k in updates}
+    new_lines: list[str] = []
+    for line in lines:
+        key = line.split("=", 1)[0]
+        if key in updates:
+            new_lines.append(f"{key}={updates[key]}\n")
+            found[key] = True
+        else:
+            new_lines.append(line)
+
+    for key, seen in found.items():
+        if not seen:
+            new_lines.append(f"{key}={updates[key]}\n")
+
+    with open(ENV_FILE, "w") as f:
+        f.writelines(new_lines)
+
+    for key, value in updates.items():
+        os.environ[key] = value

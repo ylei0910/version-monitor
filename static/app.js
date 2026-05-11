@@ -411,6 +411,49 @@ async function deleteService(name) {
 
 // ── App settings save ──────────────────────────────────────────────────────
 
+async function downloadBackup() {
+  const includeSecrets = document.getElementById('backup-secrets-cb').checked;
+  if (includeSecrets && !confirm('The backup will contain your Telegram and GitHub tokens. Keep this file secure.\n\nContinue?')) return;
+  try {
+    const res = await fetch(`/api/backup?include_secrets=${includeSecrets}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match ? match[1] : 'version-monitor-backup.json';
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Backup downloaded');
+  } catch (e) {
+    showToast(`Backup failed: ${e.message}`, 'error');
+  }
+}
+
+async function restoreBackup(file) {
+  if (!confirm(`Restore from "${file.name}"? This will overwrite your current services, versions, and settings.`)) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    await apiFetch('/api/restore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    showToast('Restore complete');
+    await loadConfig();
+    await loadServices();
+    const configData = await apiFetch('/api/config');
+    populateServicesTable(configData);
+    document.getElementById('setting-interval').value = configData.settings.github_check_interval_minutes;
+  } catch (e) {
+    showToast(`Restore failed: ${e.message}`, 'error');
+  }
+}
+
 async function saveAppSettings() {
   const intervalVal = parseInt(document.getElementById('setting-interval').value, 10);
   if (isNaN(intervalVal) || intervalVal < 0) {
@@ -463,6 +506,11 @@ async function init() {
   });
 
   document.getElementById('save-settings-btn').addEventListener('click', saveAppSettings);
+  document.getElementById('backup-btn').addEventListener('click', downloadBackup);
+  document.getElementById('restore-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) { restoreBackup(file); e.target.value = ''; }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

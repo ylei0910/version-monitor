@@ -9,6 +9,7 @@ from typing import Optional
 
 import httpx
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from packaging.version import InvalidVersion
 from packaging.version import Version as PkgVersion
@@ -19,6 +20,7 @@ from app.config import (
     reload_services,
     save_services,
     save_setting_interval,
+    save_secrets,
 )
 from app.database import close_db, get_all_versions, init_db, set_version
 from app.github import get_latest_version
@@ -34,6 +36,8 @@ from app.models import (
     ServiceStatus,
     UpdateServicesRequest,
     UpdateSettingsRequest,
+    BackupData,
+    BackupSecrets,
 )
 from app.notifier import send_telegram_notification
 from app.scheduler import create_scheduler, reschedule
@@ -289,6 +293,91 @@ async def update_settings(body: UpdateSettingsRequest):
 
     if _scheduler:
         reschedule(_scheduler, _config, _run_check_and_notify)
+
+    return await get_config()
+
+
+@app.get("/api/backup")
+async def backup(include_secrets: bool = False):
+    async with _config_lock:
+        services = list(_config.services)
+        interval = _config.github_check_interval_minutes
+
+    manual_versions = await get_all_versions()
+
+    secrets = None
+    if include_secrets:
+        secrets = BackupSecrets(
+            telegram_bot_token=_config.telegram_bot_token,
+            telegram_chat_id=_config.telegram_chat_id,
+            github_token=_config.github_token,
+        )
+
+    data = BackupData(
+        exported_at=datetime.now(timezone.utc),
+        services=services,
+        manual_versions=manual_versions,
+        settings=AppSettings(
+            github_check_interval_minutes=interval,
+            scheduler_enabled=interval > 0,
+        ),
+        secrets=secrets,
+    )
+
+    filename = f"version-monitor-backup-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json"
+    return JSONResponse(
+        content=data.model_dump(mode="json"),
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.post("/api/restore", response_model=ConfigResponse)
+async def restore(body: BackupData):
+    # Restore services
+    try:
+        save_services(body.services)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to restore services: {e}")
+
+    async with _config_lock:
+        try:
+            reload_services(_config)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Config reload failed: {e}")
+
+    # Restore manual versions
+    for name, version in body.manual_versions.items():
+        await set_version(name, version)
+
+    # Restore settings
+    try:
+        save_setting_interval(body.settings.github_check_interval_minutes)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to restore settings: {e}")
+
+    async with _config_lock:
+        _config.github_check_interval_minutes = body.settings.github_check_interval_minutes
+
+    if _scheduler:
+        reschedule(_scheduler, _config, _run_check_and_notify)
+
+    # Restore secrets if present
+    if body.secrets:
+        try:
+            save_secrets(
+                telegram_bot_token=body.secrets.telegram_bot_token or _config.telegram_bot_token,
+                telegram_chat_id=body.secrets.telegram_chat_id or _config.telegram_chat_id,
+                github_token=body.secrets.github_token,
+            )
+            async with _config_lock:
+                if body.secrets.telegram_bot_token:
+                    _config.telegram_bot_token = body.secrets.telegram_bot_token
+                if body.secrets.telegram_chat_id:
+                    _config.telegram_chat_id = body.secrets.telegram_chat_id
+                if body.secrets.github_token is not None:
+                    _config.github_token = body.secrets.github_token or None
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to restore secrets: {e}")
 
     return await get_config()
 

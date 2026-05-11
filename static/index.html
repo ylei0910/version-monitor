@@ -24,7 +24,17 @@
   <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
     <div class="modal-header">
       <h2>Settings</h2>
-      <button class="btn btn-icon" id="modal-close" title="Close">&#x2715;</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label class="backup-secrets-label" title="Include Telegram and GitHub tokens in backup file">
+          <input type="checkbox" id="backup-secrets-cb"> Incl. secrets
+        </label>
+        <button class="btn" id="backup-btn" title="Download backup">&#8595; Backup</button>
+        <label class="btn" id="restore-label" title="Restore from backup" style="cursor:pointer;margin:0">
+          &#8593; Restore
+          <input type="file" id="restore-input" accept=".json" style="display:none">
+        </label>
+        <button class="btn btn-icon" id="modal-close" title="Close">&#x2715;</button>
+      </div>
     </div>
     <div class="modal-tabs">
       <button class="tab-btn active" data-tab="tab-services">Services</button>

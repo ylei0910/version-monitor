@@ -73,3 +73,18 @@ class UpdateServicesRequest(BaseModel):
 
 class UpdateSettingsRequest(BaseModel):
     github_check_interval_minutes: int
+
+
+class BackupSecrets(BaseModel):
+    telegram_bot_token: Optional[str] = None
+    telegram_chat_id: Optional[str] = None
+    github_token: Optional[str] = None
+
+
+class BackupData(BaseModel):
+    backup_version: str = "1"
+    exported_at: datetime
+    services: list[ServiceConfig]
+    manual_versions: dict[str, str]
+    settings: AppSettings
+    secrets: Optional[BackupSecrets] = None

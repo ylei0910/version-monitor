@@ -321,6 +321,18 @@ body {
 /* ── Settings Form ── */
 .settings-form { display: flex; flex-direction: column; gap: 20px; }
 .settings-form .field { max-width: 300px; }
+.backup-secrets-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.backup-secrets-label:hover { color: var(--yellow); }
+.backup-secrets-label input { accent-color: var(--yellow); cursor: pointer; }
+
 .secret-note {
   background: var(--bg-primary);
   border: 1px solid var(--border);
