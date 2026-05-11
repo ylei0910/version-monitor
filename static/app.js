@@ -220,7 +220,7 @@ function startInlineEdit(el, serviceName) {
 async function triggerNotify() {
   const btn = document.getElementById('notify-btn');
   btn.disabled = true;
-  const original = btn.textContent;
+  const original = btn.innerHTML;
   btn.textContent = 'Sending…';
   try {
     const data = await apiFetch('/api/notify', { method: 'POST' });
@@ -233,7 +233,7 @@ async function triggerNotify() {
     showToast(`Notify failed: ${e.message}`, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = original;
+    btn.innerHTML = original;
   }
 }
 
@@ -311,11 +311,13 @@ function clearServiceForm() {
   ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-basic-auth'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  document.getElementById('sf-version-type').value = 'key';
-  toggleVersionTypeFields('key');
+  document.getElementById('sf-version-type').value = 'manual';
+  toggleVersionTypeFields('manual');
 }
 
 function toggleVersionTypeFields(type) {
+  const urlFields = document.getElementById('sf-url-fields');
+  urlFields.style.display = type === 'manual' ? 'none' : 'block';
   document.getElementById('sf-key-field').style.display = type === 'key' ? 'block' : 'none';
   document.getElementById('sf-template-field').style.display = type === 'template' ? 'block' : 'none';
 }
@@ -329,11 +331,14 @@ function openServiceForm(nameToEdit) {
     const svc = configMeta[nameToEdit];
     if (!svc) return;
     document.getElementById('sf-name').value = svc.name;
-    document.getElementById('sf-name').disabled = true; // name is the key, don't allow changing
+    document.getElementById('sf-name').disabled = true;
     document.getElementById('sf-github').value = svc.github ?? '';
     document.getElementById('sf-version-url').value = svc.version_url ?? '';
     document.getElementById('sf-basic-auth').value = '';
-    if (svc.version_template) {
+    if (!svc.version_url) {
+      document.getElementById('sf-version-type').value = 'manual';
+      toggleVersionTypeFields('manual');
+    } else if (svc.version_template) {
       document.getElementById('sf-version-type').value = 'template';
       document.getElementById('sf-version-template').value = svc.version_template;
       toggleVersionTypeFields('template');
@@ -353,15 +358,15 @@ async function saveServiceForm() {
   if (!name) { showToast('Name is required', 'error'); return; }
 
   const github = document.getElementById('sf-github').value.trim() || null;
-  const version_url = document.getElementById('sf-version-url').value.trim() || null;
   const vtype = document.getElementById('sf-version-type').value;
+  const version_url = vtype === 'manual' ? null : (document.getElementById('sf-version-url').value.trim() || null);
   const version_key = vtype === 'key' && version_url
     ? (document.getElementById('sf-version-key').value.trim() || null)
     : null;
   const version_template = vtype === 'template' && version_url
     ? (document.getElementById('sf-version-template').value.trim() || null)
     : null;
-  const basic_auth = document.getElementById('sf-basic-auth').value.trim() || null;
+  const basic_auth = vtype === 'manual' ? null : (document.getElementById('sf-basic-auth').value.trim() || null);
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
     ...(version_key && { version_key }), ...(version_template && { version_template }),

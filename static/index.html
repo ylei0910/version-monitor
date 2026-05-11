@@ -76,39 +76,41 @@
             <input id="sf-github" type="text" placeholder="go-gitea/gitea">
           </div>
           <div class="field">
-            <label>Version URL</label>
-            <input id="sf-version-url" type="text" placeholder="http://192.168.1.10:3000/api/v1/version">
-            <div class="hint">Leave empty for manual version input</div>
-          </div>
-          <div class="field">
-            <label>Version source type</label>
+            <label>Version source</label>
             <select id="sf-version-type">
-              <option value="key">Key (dot-notation)</option>
-              <option value="template">Template ({major}.{minor}.{patch})</option>
+              <option value="manual">Manual (set version in UI)</option>
+              <option value="key">HTTP endpoint — JSON key</option>
+              <option value="template">HTTP endpoint — template ({major}.{minor}.{patch})</option>
             </select>
           </div>
-          <div class="field">
-            <label>Basic Auth</label>
-            <div class="password-wrap">
-              <input id="sf-basic-auth" type="password" placeholder="username:password" autocomplete="off">
-              <button type="button" class="reveal-btn" data-target="sf-basic-auth" title="Show/hide">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-              </button>
+          <div id="sf-url-fields" style="display:none">
+            <div class="field">
+              <label>Version URL</label>
+              <input id="sf-version-url" type="text" placeholder="http://192.168.1.10:3000/api/v1/version">
             </div>
-            <div class="hint">Leave empty if the endpoint requires no authentication</div>
-          </div>
-          <div class="field" id="sf-key-field">
-            <label>Version key</label>
-            <input id="sf-version-key" type="text" placeholder="version">
-            <div class="hint">Dot-notation path into JSON response, e.g. <code>server.version</code></div>
-          </div>
-          <div class="field" id="sf-template-field" style="display:none">
-            <label>Version template</label>
-            <input id="sf-version-template" type="text" placeholder="{major}.{minor}.{patch}">
-            <div class="hint">Field names from JSON response, e.g. <code>{major}.{minor}.{patch}</code></div>
+            <div class="field" id="sf-key-field">
+              <label>Version key</label>
+              <input id="sf-version-key" type="text" placeholder="version">
+              <div class="hint">Dot-notation path into JSON response, e.g. <code>server.version</code></div>
+            </div>
+            <div class="field" id="sf-template-field" style="display:none">
+              <label>Version template</label>
+              <input id="sf-version-template" type="text" placeholder="{major}.{minor}.{patch}">
+              <div class="hint">Field names from JSON response, e.g. <code>{major}.{minor}.{patch}</code></div>
+            </div>
+            <div class="field">
+              <label>Basic Auth</label>
+              <div class="password-wrap">
+                <input id="sf-basic-auth" type="password" placeholder="username:password" autocomplete="off">
+                <button type="button" class="reveal-btn" data-target="sf-basic-auth" title="Show/hide">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="hint">Leave empty if the endpoint requires no authentication</div>
+            </div>
           </div>
         </div>
         <div class="form-actions" style="margin-top:16px">
