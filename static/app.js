@@ -367,7 +367,9 @@ function openServiceForm(nameToEdit) {
     document.getElementById('sf-name').disabled = true;
     document.getElementById('sf-github').value = svc.github ?? '';
     document.getElementById('sf-version-url').value = svc.version_url ?? '';
-    document.getElementById('sf-basic-auth').value = '';
+    const authField = document.getElementById('sf-basic-auth');
+    authField.value = svc.basic_auth ?? '';
+    authField.placeholder = 'username:password';
     if (!svc.version_url) {
       document.getElementById('sf-version-type').value = 'manual';
       toggleVersionTypeFields('manual');

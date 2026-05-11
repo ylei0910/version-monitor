@@ -218,6 +218,7 @@ async def get_config():
             has_version_url=svc.version_url is not None,
             has_github=svc.github is not None,
             has_basic_auth=svc.basic_auth is not None,
+            basic_auth=svc.basic_auth,
         )
         for svc in services
     ]

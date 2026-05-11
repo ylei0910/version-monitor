@@ -56,6 +56,7 @@ class ConfigServiceMeta(BaseModel):
     has_version_url: bool
     has_github: bool
     has_basic_auth: bool
+    basic_auth: Optional[str] = None
 
 
 class AppSettings(BaseModel):
