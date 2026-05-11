@@ -355,6 +355,9 @@ function clearServiceForm() {
 function toggleVersionTypeFields(type) {
   const urlFields = document.getElementById('sf-url-fields');
   urlFields.style.display = type === 'manual' ? 'none' : 'flex';
+  document.getElementById('sf-version-url').placeholder = type === 'metrics'
+    ? 'http://192.168.1.10:8080/metrics'
+    : 'http://192.168.1.10:3000/api/v1/version';
   document.getElementById('sf-key-field').style.display = type === 'key' ? 'block' : 'none';
   document.getElementById('sf-template-field').style.display = type === 'template' ? 'block' : 'none';
   document.getElementById('sf-metric-field').style.display = type === 'metrics' ? 'block' : 'none';
