@@ -169,8 +169,8 @@ function buildInstalledVersionHtml(svc, isEditing) {
   }
   const hasValue = svc.installed_version != null;
   return hasValue
-    ? `<span class="version-value editable" data-service="${escapeHtml(svc.name)}">${escapeHtml(svc.installed_version)}</span>`
-    : `<span class="version-value editable placeholder" data-service="${escapeHtml(svc.name)}">click to set</span>`;
+    ? `<span class="version-value editable" data-service="${escapeHtml(svc.name)}" title="Click to edit">${escapeHtml(svc.installed_version)} ✎</span>`
+    : `<span class="version-value editable placeholder" data-service="${escapeHtml(svc.name)}" title="Click to set version">✎ set version</span>`;
 }
 
 function attachEditListener(card, serviceName) {

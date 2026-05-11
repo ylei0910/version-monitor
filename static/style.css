@@ -165,6 +165,7 @@ body {
   padding-bottom: 1px;
 }
 .version-value.editable:hover { color: #4d9eff; }
+.version-value.editable .edit-icon { color: var(--text-muted); font-style: normal; margin-left: 3px; }
 
 .version-value.placeholder {
   color: var(--text-muted);
