@@ -363,6 +363,10 @@ body {
   color: var(--green);
   border-color: var(--green);
 }
+.reveal-btn .eye-on { display: none; }
+.reveal-btn .eye-off { display: block; }
+.reveal-btn.active .eye-on { display: block; }
+.reveal-btn.active .eye-off { display: none; }
 
 .backup-popover {
   display: none;
