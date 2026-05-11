@@ -1,20 +1,23 @@
 # Version Monitor
 
-A self-hosted web app that shows installed versions of your self-hosted services vs. their latest GitHub releases — styled like Uptime Kuma's status grid.
+A self-hosted web app that shows installed versions of your self-hosted services vs. their latest release — styled like Uptime Kuma's status grid.
 
 ![Status grid with green/red indicators per service](https://placehold.co/800x400/0d1117/3fb950?text=Version+Monitor)
 
 ## Features
 
-- **Status grid** — dark theme, one card per service; green = up to date, yellow = update available, red = status unknown
-- **Two version sources** — HTTP endpoint (JSON key or template) or manual input via the UI
-- **GitHub releases** — fetches latest release once per day (configurable); no token needed for typical setups
-- **Telegram notifications** — single message listing outdated services and fetch failures, sent on the same schedule as the version check
-- **Settings UI** — add, edit, and delete services without touching `services.yaml` by hand
+- **Status grid** — dark theme, one card per service; green = up to date, yellow = update available, red = unknown
+- **Flexible version sources** — JSON key, JSON template, Prometheus metrics endpoint, or manual input via the UI
+- **Latest version sources** — GitHub releases or any REST API endpoint (`latest_url`)
+- **Authentication** — per-service HTTP Basic Auth or arbitrary `Authorization` header (Bearer tokens, API keys, etc.)
+- **Telegram notifications** — single message listing outdated services and fetch failures, sent on a configurable schedule
+- **Settings UI** — add, edit, and delete services; configure Telegram and check intervals without touching config files
+- **Backup / restore** — export and import the full configuration (services + settings + optional secrets) as JSON
+- **Sortable grid** — sort by name, status, or drag-and-drop custom order
 - **Persistent manual versions** — stored in SQLite, survive restarts
 - **`/health` endpoint** — for monitoring the monitor (Uptime Kuma, etc.)
 - **Systemd-native** — no Docker; runs as a dedicated `vmonitor` user in a Proxmox LXC or any Debian/Ubuntu host
-- **GitHub Actions CI/CD** — lint on every push, SSH deploy to multiple hosts on merge to `main`
+- **GitHub Actions CI/CD** — lint on every push, deploy to multiple hosts on merge to `main`, automatic patch version bump after each push
 
 ## Quick Start
 
@@ -102,12 +105,13 @@ journalctl -u version-monitor -f
 
 ## CI/CD (GitHub Actions)
 
-Two workflows are included:
+Three workflows are included:
 
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `ci.yml` | Every push / PR | Syntax check + ruff lint |
 | `deploy.yml` | Push to `main` | Runs `deploy.sh` on each registered self-hosted runner |
+| `bump-version.yml` | Push to `main` | Bumps the patch version in `VERSION` and commits it back (`[skip ci]`) |
 
 Deployment uses **self-hosted runners** — the runner process on each LXC polls GitHub for jobs, so no ports need to be exposed.
 
@@ -133,15 +137,35 @@ Every push to `main` will deploy to all listed runners in parallel. A failure on
 
 ## `services.yaml` Reference
 
+### Installed version
+
 | Field | Required | Description |
 |---|---|---|
 | `name` | Yes | Display name (must be unique) |
-| `github` | No | `owner/repo` — used to fetch latest release |
-| `version_url` | No | HTTP endpoint to fetch installed version from |
-| `version_key` | No | Dot-notation path into JSON response, e.g. `server.version` |
+| `version_url` | No | HTTP endpoint to fetch the installed version from |
+| `version_key` | No | Dot-notation JSON path, e.g. `server.version` |
 | `version_template` | No | Template with JSON field names, e.g. `{major}.{minor}.{patch}` |
+| `version_metric` | No | Prometheus metric name, e.g. `cs_info` (matches `cs_info{version="…"}`) |
+| `version_label` | No | Label to extract from the metric (default: `version`) |
+| `version_regex` | No | Regex applied to the installed version string, e.g. `v?(\d+\.\d+\.\d+)` |
 
-If neither `version_url` nor `version_key`/`version_template` is set, the service uses **manual input** via the UI.
+If `version_url` is not set, the service uses **manual input** via the UI.
+
+### Latest version
+
+| Field | Required | Description |
+|---|---|---|
+| `github` | No | `owner/repo` — fetches the latest GitHub release; also shows a link on the card |
+| `latest_url` | No | REST API endpoint returning the latest version as JSON; takes precedence over `github` |
+| `latest_key` | No | Dot-notation JSON path for `latest_url`, e.g. `release.tag` |
+| `latest_regex` | No | Regex applied to the latest version string, e.g. `v?(\d+\.\d+\.\d+)` to strip a `v` prefix |
+
+### Authentication
+
+| Field | Required | Description |
+|---|---|---|
+| `auth_header` | No | Raw `Authorization` header value, e.g. `Bearer mytoken`. Takes precedence over `basic_auth`. |
+| `basic_auth` | No | HTTP Basic Auth credentials as `username:password` |
 
 ## Environment Variables
 
@@ -173,14 +197,17 @@ A notification is only sent when there is something to report. If everything is 
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/health` | `{"status":"ok","version":"1.0.0"}` |
+| `GET` | `/health` | `{"status":"ok","version":"…"}` |
 | `GET` | `/api/services` | All services with versions and status |
 | `POST` | `/api/services/{name}/version` | Save a manual version |
 | `POST` | `/api/notify` | Trigger check + Telegram notification now |
+| `POST` | `/api/refresh` | Force-refresh GitHub version cache |
 | `GET` | `/api/config` | Current service list and settings |
 | `POST` | `/api/config/services` | Replace full service list |
 | `DELETE` | `/api/config/services/{name}` | Remove a service |
-| `POST` | `/api/config/settings` | Update check interval |
+| `POST` | `/api/config/settings` | Update check interval, notify cron, and Telegram credentials |
+| `GET` | `/api/backup` | Download full configuration as JSON (`?include_secrets=true` for tokens) |
+| `POST` | `/api/restore` | Restore configuration from a backup JSON |
 
 ## License
 
