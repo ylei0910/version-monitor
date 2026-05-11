@@ -67,23 +67,26 @@ chown "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}/data"
 echo "==> Setting up configuration files..."
 if [ ! -f "${INSTALL_DIR}/.env" ]; then
     cp "${INSTALL_DIR}/.env.example" "${INSTALL_DIR}/.env"
-    chown "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}/.env"
-    chmod 600 "${INSTALL_DIR}/.env"
     echo ""
     echo "  *** Created ${INSTALL_DIR}/.env — edit it before starting the service! ***"
     echo "  Required: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID"
 else
     echo "    .env already exists, skipping."
 fi
+# root owns, vmonitor can read — secrets not world-readable
+chown root:"${SERVICE_USER}" "${INSTALL_DIR}/.env"
+chmod 640 "${INSTALL_DIR}/.env"
 
 if [ ! -f "${INSTALL_DIR}/services.yaml" ]; then
     cp "${INSTALL_DIR}/services.yaml.example" "${INSTALL_DIR}/services.yaml"
-    chown "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}/services.yaml"
     echo ""
     echo "  *** Created ${INSTALL_DIR}/services.yaml — edit it to configure your services! ***"
 else
     echo "    services.yaml already exists, skipping."
 fi
+# vmonitor needs read+write access (UI can edit services.yaml via API)
+chown root:"${SERVICE_USER}" "${INSTALL_DIR}/services.yaml"
+chmod 660 "${INSTALL_DIR}/services.yaml"
 
 # ── 7. (no sudoers needed — runner runs as root with RUNNER_ALLOW_RUNASROOT=1) ──
 
