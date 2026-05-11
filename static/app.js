@@ -292,7 +292,9 @@ function populateServicesTable(configData) {
   for (const svc of configData.services) {
     const tr = document.createElement('tr');
     let sourceHtml, sourceTitle = '';
-    if (svc.version_key) {
+    if (svc.version_metric) {
+      sourceHtml = `<span class="badge" title="${escapeHtml(svc.version_metric)}.${escapeHtml(svc.version_label || 'version')}">metrics</span>`;
+    } else if (svc.version_key) {
       sourceHtml = `key: <code>${escapeHtml(svc.version_key)}</code>`;
     } else if (svc.version_template) {
       sourceHtml = `<span class="badge" title="${escapeHtml(svc.version_template)}">template</span>`;
@@ -343,7 +345,7 @@ function hideServiceForm() {
 }
 
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-basic-auth'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-basic-auth'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'manual';
@@ -355,6 +357,8 @@ function toggleVersionTypeFields(type) {
   urlFields.style.display = type === 'manual' ? 'none' : 'flex';
   document.getElementById('sf-key-field').style.display = type === 'key' ? 'block' : 'none';
   document.getElementById('sf-template-field').style.display = type === 'template' ? 'block' : 'none';
+  document.getElementById('sf-metric-field').style.display = type === 'metrics' ? 'block' : 'none';
+  document.getElementById('sf-metric-label-field').style.display = type === 'metrics' ? 'block' : 'none';
 }
 
 function openServiceForm(nameToEdit) {
@@ -375,6 +379,11 @@ function openServiceForm(nameToEdit) {
     if (!svc.version_url) {
       document.getElementById('sf-version-type').value = 'manual';
       toggleVersionTypeFields('manual');
+    } else if (svc.version_metric) {
+      document.getElementById('sf-version-type').value = 'metrics';
+      document.getElementById('sf-version-metric').value = svc.version_metric;
+      document.getElementById('sf-version-label').value = svc.version_label ?? '';
+      toggleVersionTypeFields('metrics');
     } else if (svc.version_template) {
       document.getElementById('sf-version-type').value = 'template';
       document.getElementById('sf-version-template').value = svc.version_template;
@@ -403,10 +412,17 @@ async function saveServiceForm() {
   const version_template = vtype === 'template' && version_url
     ? (document.getElementById('sf-version-template').value.trim() || null)
     : null;
+  const version_metric = vtype === 'metrics' && version_url
+    ? (document.getElementById('sf-version-metric').value.trim() || null)
+    : null;
+  const version_label = vtype === 'metrics' && version_url
+    ? (document.getElementById('sf-version-label').value.trim() || null)
+    : null;
   const basic_auth = vtype === 'manual' ? null : (document.getElementById('sf-basic-auth').value.trim() || null);
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
     ...(version_key && { version_key }), ...(version_template && { version_template }),
+    ...(version_metric && { version_metric }), ...(version_label && { version_label }),
     ...(basic_auth && { basic_auth }) };
 
   // Build updated list
@@ -416,6 +432,8 @@ async function saveServiceForm() {
     ...(s.version_url && { version_url: s.version_url }),
     ...(s.version_key && { version_key: s.version_key }),
     ...(s.version_template && { version_template: s.version_template }),
+    ...(s.version_metric && { version_metric: s.version_metric }),
+    ...(s.version_label && { version_label: s.version_label }),
   }));
 
   if (editingService) {

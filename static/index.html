@@ -124,6 +124,7 @@
               <option value="manual">Manual (set version in UI)</option>
               <option value="key">HTTP endpoint — JSON key</option>
               <option value="template">HTTP endpoint — template ({major}.{minor}.{patch})</option>
+              <option value="metrics">HTTP endpoint — Prometheus metrics</option>
             </select>
           </div>
           <div id="sf-url-fields" style="display:none">
@@ -140,6 +141,16 @@
               <label>Version template</label>
               <input id="sf-version-template" type="text" placeholder="{major}.{minor}.{patch}">
               <div class="hint">Field names from JSON response, e.g. <code>{major}.{minor}.{patch}</code></div>
+            </div>
+            <div class="field" id="sf-metric-field" style="display:none">
+              <label>Metric name</label>
+              <input id="sf-version-metric" type="text" placeholder="cs_info">
+              <div class="hint">Prometheus metric name, e.g. <code>cs_info</code> matches <code>cs_info{version="…"}</code></div>
+            </div>
+            <div class="field" id="sf-metric-label-field" style="display:none">
+              <label>Label name</label>
+              <input id="sf-version-label" type="text" placeholder="version">
+              <div class="hint">Label to extract (default: <code>version</code>)</div>
             </div>
             <div class="field">
               <label>Basic Auth</label>
