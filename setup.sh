@@ -6,7 +6,7 @@
 #   bash setup.sh
 #
 # Environment variables (optional):
-#   REPO_URL        Git repo URL to clone (leave empty to copy from CWD)
+#   REPO_URL        Git repo URL to clone (default: the GitHub repo)
 #   RUNNER_TOKEN    GitHub Actions runner registration token
 #                   Get it from: GitHub repo → Settings → Actions → Runners → New self-hosted runner
 #   RUNNER_LABEL    Unique label for this host's runner (default: hostname)
@@ -18,7 +18,7 @@ VENV_DIR="${INSTALL_DIR}/venv"
 RUNNER_DIR="/opt/version-monitor-runner"
 SERVICE_NAME="version-monitor"
 SERVICE_USER="vmonitor"
-REPO_URL="${REPO_URL:-}"
+REPO_URL="${REPO_URL:-https://github.com/ylei0910/version-monitor.git}"
 RUNNER_TOKEN="${RUNNER_TOKEN:-}"
 RUNNER_LABEL="${RUNNER_LABEL:-$(hostname)}"
 GITHUB_REPO="ylei0910/version-monitor"
@@ -45,12 +45,6 @@ if [ -n "${REPO_URL}" ]; then
         sudo -u "${SERVICE_USER}" git -C "${INSTALL_DIR}" pull --ff-only
     else
         git clone "${REPO_URL}" "${INSTALL_DIR}"
-    fi
-else
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    if [ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]; then
-        mkdir -p "${INSTALL_DIR}"
-        cp -r "${SCRIPT_DIR}/." "${INSTALL_DIR}/"
     fi
 fi
 chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}"
@@ -164,9 +158,9 @@ if [ -n "${RUNNER_TOKEN}" ]; then
 else
     echo ""
     echo "  *** RUNNER_TOKEN not set — skipping runner registration. ***"
-    echo "  To register (re-run this script with the token, or do it manually):"
+    echo "  To register, re-run with a token:"
     echo ""
-    echo "    RUNNER_TOKEN=<token> RUNNER_LABEL=${RUNNER_LABEL} bash ${BASH_SOURCE[0]}"
+    echo "    curl -sL https://raw.githubusercontent.com/${GITHUB_REPO}/main/setup.sh | RUNNER_TOKEN=<token> RUNNER_LABEL=${RUNNER_LABEL} bash"
     echo ""
     echo "  Get a token from:"
     echo "    https://github.com/${GITHUB_REPO}/settings/actions/runners/new"

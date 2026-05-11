@@ -27,6 +27,7 @@ cd version-monitor
 
 ### 2. Configure
 
+
 ```bash
 cp .env.example .env
 cp services.yaml.example services.yaml
@@ -74,11 +75,14 @@ Open [http://localhost:8080](http://localhost:8080).
 Run as root on the LXC:
 
 ```bash
-# From a local copy
-bash setup.sh
+curl -sL https://raw.githubusercontent.com/ylei0910/version-monitor/main/setup.sh | bash
+```
 
-# Or with a repo URL
-REPO_URL=https://github.com/ylei0910/version-monitor.git bash setup.sh
+With optional environment variables:
+
+```bash
+curl -sL https://raw.githubusercontent.com/ylei0910/version-monitor/main/setup.sh \
+  | RUNNER_TOKEN=<token> RUNNER_LABEL=lxc-home bash
 ```
 
 The script will:
@@ -110,10 +114,8 @@ Deployment uses **self-hosted runners** — the runner process on each LXC polls
 1. Run `setup.sh` on each LXC (see [Proxmox LXC / Debian Install](#proxmox-lxc--debian-install)).  
    Supply a registration token to register the runner automatically:
    ```bash
-   REPO_URL=https://github.com/ylei0910/version-monitor \
-   RUNNER_TOKEN=<token_from_github> \
-   RUNNER_LABEL=lxc-home \
-   bash setup.sh
+   curl -sL https://raw.githubusercontent.com/ylei0910/version-monitor/main/setup.sh \
+     | RUNNER_TOKEN=<token_from_github> RUNNER_LABEL=lxc-home bash
    ```
    Get the token from: **GitHub repo → Settings → Actions → Runners → New self-hosted runner**
 
