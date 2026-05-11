@@ -80,6 +80,11 @@
               <option value="template">Template ({major}.{minor}.{patch})</option>
             </select>
           </div>
+          <div class="field">
+            <label>Basic Auth</label>
+            <input id="sf-basic-auth" type="text" placeholder="username:password" autocomplete="off">
+            <div class="hint">Leave empty if the endpoint requires no authentication</div>
+          </div>
           <div class="field" id="sf-key-field">
             <label>Version key</label>
             <input id="sf-version-key" type="text" placeholder="version">
@@ -110,8 +115,8 @@
           <button class="btn btn-primary" id="save-settings-btn">Save Settings</button>
         </div>
         <div class="secret-note">
-          <strong>Credentials</strong> (Telegram token, GitHub token) are stored in <code>.env</code>
-          on the server and are not configurable here for security reasons.
+          <strong>Telegram &amp; GitHub tokens</strong> are stored in <code>.env</code>
+          on the server and are not configurable here. Use the Backup/Restore buttons to migrate them.
         </div>
       </div>
     </div>

@@ -269,11 +269,12 @@ function populateServicesTable(configData) {
         : svc.version_url
           ? `url only`
           : `<span class="badge manual">manual</span>`;
+    const authBadge = svc.has_basic_auth ? ` <span class="badge" title="Basic auth configured">&#128274;</span>` : '';
 
     tr.innerHTML = `
       <td><strong>${escapeHtml(svc.name)}</strong></td>
       <td class="text-muted">${escapeHtml(svc.github ?? '—')}</td>
-      <td>${versionSource}</td>
+      <td>${versionSource}${authBadge}</td>
       <td>
         <div class="td-actions">
           <button class="btn" data-action="edit" data-name="${escapeHtml(svc.name)}">Edit</button>
@@ -307,7 +308,7 @@ function hideServiceForm() {
 }
 
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-basic-auth'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'key';
@@ -331,6 +332,7 @@ function openServiceForm(nameToEdit) {
     document.getElementById('sf-name').disabled = true; // name is the key, don't allow changing
     document.getElementById('sf-github').value = svc.github ?? '';
     document.getElementById('sf-version-url').value = svc.version_url ?? '';
+    document.getElementById('sf-basic-auth').value = '';
     if (svc.version_template) {
       document.getElementById('sf-version-type').value = 'template';
       document.getElementById('sf-version-template').value = svc.version_template;
@@ -359,9 +361,11 @@ async function saveServiceForm() {
   const version_template = vtype === 'template' && version_url
     ? (document.getElementById('sf-version-template').value.trim() || null)
     : null;
+  const basic_auth = document.getElementById('sf-basic-auth').value.trim() || null;
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
-    ...(version_key && { version_key }), ...(version_template && { version_template }) };
+    ...(version_key && { version_key }), ...(version_template && { version_template }),
+    ...(basic_auth && { basic_auth }) };
 
   // Build updated list
   let services = Object.values(configMeta).map(s => ({
