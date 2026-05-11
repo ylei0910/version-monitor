@@ -64,7 +64,7 @@ python3 -m venv "${VENV_DIR}"
 echo "==> Ensuring data directory exists..."
 mkdir -p "${INSTALL_DIR}/data"
 # data/ must be writable by the app user (vmonitor) for SQLite
-chown "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}/data"
+chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}/data"
 
 # ── 6. Configuration files ───────────────────────────────────────────────────
 echo "==> Setting up configuration files..."
