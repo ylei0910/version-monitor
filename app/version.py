@@ -19,6 +19,23 @@ def _extract_by_key(data: dict, key: str) -> Optional[str]:
     return str(current) if current is not None else None
 
 
+def _post_process(version: str, regex: Optional[str]) -> tuple[Optional[str], Optional[str]]:
+    if not regex:
+        return version, None
+    result = _apply_regex(version, regex)
+    if result is None:
+        return None, f"version_regex '{regex}' did not match '{version}'"
+    return result, None
+
+
+def _apply_regex(value: str, pattern: str) -> Optional[str]:
+    """Apply a regex with one capture group; return the first match or None."""
+    m = re.search(pattern, value)
+    if not m:
+        return None
+    return m.group(1) if m.lastindex else m.group(0)
+
+
 def _extract_from_metrics(text: str, metric_name: str, label: str = "version") -> Optional[str]:
     """Extract a label value from a Prometheus text-format metrics response."""
     pattern = re.compile(
@@ -47,6 +64,7 @@ async def fetch_installed_version(
     basic_auth: Optional[str] = None,
     version_metric: Optional[str] = None,
     version_label: Optional[str] = None,
+    version_regex: Optional[str] = None,
 ) -> tuple[Optional[str], Optional[str]]:
     """Return (version, error)."""
     auth = None
@@ -69,7 +87,7 @@ async def fetch_installed_version(
         version = _extract_from_metrics(resp.text, version_metric, label)
         if version is None:
             return None, f"metric '{version_metric}' with label '{label}' not found in response"
-        return version, None
+        return _post_process(version, version_regex)
 
     try:
         data = resp.json()
@@ -83,12 +101,12 @@ async def fetch_installed_version(
         version = _extract_by_key(data, version_key)
         if version is None:
             return None, f"version_key '{version_key}' not found in response"
-        return version, None
+        return _post_process(version, version_regex)
 
     if version_template:
         version = _extract_by_template(data, version_template)
         if version is None:
             return None, "version_template fields missing from response"
-        return version, None
+        return _post_process(version, version_regex)
 
     return None, "no version_key, version_template, or version_metric configured"

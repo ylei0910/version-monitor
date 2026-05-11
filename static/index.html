@@ -153,6 +153,11 @@
               <div class="hint">Label to extract (default: <code>version</code>)</div>
             </div>
             <div class="field">
+              <label>Version regex <span class="text-muted" style="font-weight:normal">(optional)</span></label>
+              <input id="sf-version-regex" type="text" placeholder="v?(\d+\.\d+\.\d+)">
+              <div class="hint">Regex with one capture group to trim the extracted value, e.g. <code>v?(\d+\.\d+\.\d+)</code></div>
+            </div>
+            <div class="field">
               <label>Basic Auth</label>
               <div class="password-wrap">
                 <input id="sf-basic-auth" type="password" placeholder="username:password" autocomplete="off">

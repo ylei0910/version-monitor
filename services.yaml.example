@@ -16,5 +16,6 @@ services:
   - name: MyApp
     github: org/myapp
     version_url: "http://192.168.1.12:8080/metrics"
-    version_metric: "cs_info"     # matches: cs_info{version="v1.2.3"} 0
-    # version_label: "version"    # optional, defaults to "version"
+    version_metric: "cs_info"               # matches: cs_info{version="v1.2.3-build"} 0
+    # version_label: "version"              # optional, defaults to "version"
+    # version_regex: "v?(\\d+\\.\\d+\\.\\d+)"  # optional: trim build suffix → "1.2.3"

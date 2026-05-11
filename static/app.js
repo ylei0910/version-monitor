@@ -345,7 +345,7 @@ function hideServiceForm() {
 }
 
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-basic-auth'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-basic-auth'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'manual';
@@ -376,6 +376,7 @@ function openServiceForm(nameToEdit) {
     document.getElementById('sf-name').disabled = true;
     document.getElementById('sf-github').value = svc.github ?? '';
     document.getElementById('sf-version-url').value = svc.version_url ?? '';
+    document.getElementById('sf-version-regex').value = svc.version_regex ?? '';
     const authField = document.getElementById('sf-basic-auth');
     authField.value = svc.basic_auth ?? '';
     authField.placeholder = 'username:password';
@@ -421,11 +422,15 @@ async function saveServiceForm() {
   const version_label = vtype === 'metrics' && version_url
     ? (document.getElementById('sf-version-label').value.trim() || null)
     : null;
+  const version_regex = vtype !== 'manual'
+    ? (document.getElementById('sf-version-regex').value.trim() || null)
+    : null;
   const basic_auth = vtype === 'manual' ? null : (document.getElementById('sf-basic-auth').value.trim() || null);
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
     ...(version_key && { version_key }), ...(version_template && { version_template }),
     ...(version_metric && { version_metric }), ...(version_label && { version_label }),
+    ...(version_regex && { version_regex }),
     ...(basic_auth && { basic_auth }) };
 
   // Build updated list
@@ -437,6 +442,7 @@ async function saveServiceForm() {
     ...(s.version_template && { version_template: s.version_template }),
     ...(s.version_metric && { version_metric: s.version_metric }),
     ...(s.version_label && { version_label: s.version_label }),
+    ...(s.version_regex && { version_regex: s.version_regex }),
   }));
 
   if (editingService) {

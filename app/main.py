@@ -89,6 +89,7 @@ async def _build_service_statuses() -> list[ServiceStatus]:
                 basic_auth=svc.basic_auth,
                 version_metric=svc.version_metric,
                 version_label=svc.version_label,
+                version_regex=svc.version_regex,
             )
             if fetched:
                 installed_version = fetched
@@ -221,6 +222,7 @@ async def get_config():
             version_template=svc.version_template,
             version_metric=svc.version_metric,
             version_label=svc.version_label,
+            version_regex=svc.version_regex,
             has_version_url=svc.version_url is not None,
             has_github=svc.github is not None,
             has_basic_auth=svc.basic_auth is not None,
