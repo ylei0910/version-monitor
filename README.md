@@ -101,18 +101,30 @@ Two workflows are included:
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `ci.yml` | Every push / PR | Syntax check + ruff lint |
-| `deploy.yml` | Push to `main` | SSH into each host and run `deploy.sh` |
+| `deploy.yml` | Push to `main` | Runs `deploy.sh` on each registered self-hosted runner |
+
+Deployment uses **self-hosted runners** — the runner process on each LXC polls GitHub for jobs, so no ports need to be exposed.
 
 ### Setup
 
-1. Add the SSH public key printed by `setup.sh` as a GitHub secret named **`DEPLOY_SSH_KEY`**
-2. Add a repository variable named **`DEPLOY_HOSTS`** as a JSON array:
+1. Run `setup.sh` on each LXC (see [Proxmox LXC / Debian Install](#proxmox-lxc--debian-install)).  
+   Supply a registration token to register the runner automatically:
+   ```bash
+   REPO_URL=https://github.com/ylei0910/version-monitor \
+   RUNNER_TOKEN=<token_from_github> \
+   RUNNER_LABEL=lxc-home \
+   bash setup.sh
+   ```
+   Get the token from: **GitHub repo → Settings → Actions → Runners → New self-hosted runner**
 
-```json
-["vmonitor@192.168.1.20:22", "vmonitor@192.168.1.21:22"]
-```
+2. Add a repository variable named **`RUNNER_LABELS`** (Settings → Variables):
+   ```json
+   ["lxc-home", "lxc-office"]
+   ```
+   Each entry is the `RUNNER_LABEL` you set when running `setup.sh` on that host.  
+   If `RUNNER_LABELS` is not set, the workflow falls back to `["self-hosted"]` (any available runner).
 
-Every push to `main` will deploy to all listed hosts in parallel. A failure on one host does not block the others.
+Every push to `main` will deploy to all listed runners in parallel. A failure on one host does not block the others.
 
 `services.yaml` and `.env` are gitignored — they survive `git pull` on each host.
 

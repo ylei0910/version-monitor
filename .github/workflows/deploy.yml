@@ -6,43 +6,25 @@ on:
       - main
 
 jobs:
-  # Gate: only deploy if lint passes
   lint:
     name: Lint & syntax check
     uses: ./.github/workflows/ci.yml
 
   deploy:
-    name: Deploy to LXC hosts
+    name: Deploy on ${{ matrix.runner }}
     needs: lint
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
 
-    # DEPLOY_HOSTS must be a JSON array of "user@host:port" strings.
-    # Example secret value: ["vmonitor@192.168.1.20:22","vmonitor@192.168.1.21:22"]
+    # RUNNER_LABELS is a repo variable (not secret) — JSON array of unique
+    # runner labels, one per LXC host. Each label is set when registering the
+    # runner on that host (see setup.sh).
+    # Example: ["version-monitor-lxc1", "version-monitor-lxc2"]
+    # Falls back to ["self-hosted"] if not set (single-host setup).
     strategy:
       matrix:
-        host: ${{ fromJson(vars.DEPLOY_HOSTS || '[]') }}
-      fail-fast: false   # deploy remaining hosts even if one fails
+        runner: ${{ fromJson(vars.RUNNER_LABELS || '["self-hosted"]') }}
+      fail-fast: false
 
     steps:
-      - name: Parse host components
-        id: parse
-        run: |
-          RAW="${{ matrix.host }}"
-          USER="${RAW%%@*}"
-          REST="${RAW#*@}"
-          HOST="${REST%%:*}"
-          PORT="${REST##*:}"
-          # If no port separator was found, port == host (no colon); default to 22
-          if [ "${PORT}" = "${HOST}" ]; then PORT="22"; fi
-          echo "user=${USER}" >> "$GITHUB_OUTPUT"
-          echo "host=${HOST}" >> "$GITHUB_OUTPUT"
-          echo "port=${PORT}" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy to ${{ matrix.host }}
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ steps.parse.outputs.host }}
-          username: ${{ steps.parse.outputs.user }}
-          port: ${{ steps.parse.outputs.port }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: bash /opt/version-monitor/deploy.sh
+      - name: Deploy
+        run: bash /opt/version-monitor/deploy.sh
