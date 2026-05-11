@@ -64,6 +64,8 @@ class AppSettings(BaseModel):
     scheduler_enabled: bool
     has_telegram_token: bool = False
     has_telegram_chat_id: bool = False
+    telegram_bot_token: Optional[str] = None
+    telegram_chat_id: Optional[str] = None
 
 
 class ConfigResponse(BaseModel):

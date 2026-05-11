@@ -60,7 +60,8 @@ async function loadConfig() {
   const tokenStatus = document.getElementById('telegram-token-status');
   if (tokenInput && tokenStatus) {
     const hasToken = data.settings.has_telegram_token;
-    tokenInput.placeholder = hasToken ? 'Leave blank to keep current' : 'Enter token (required for notifications)';
+    tokenInput.value = data.settings.telegram_bot_token ?? '';
+    tokenInput.placeholder = hasToken ? '' : 'Enter token (required for notifications)';
     tokenStatus.textContent = hasToken ? 'Configured' : 'Not set';
     tokenStatus.className = 'status-badge ' + (hasToken ? 'configured' : 'missing');
   }
@@ -68,7 +69,8 @@ async function loadConfig() {
   const chatStatus = document.getElementById('telegram-chat-status');
   if (chatInput && chatStatus) {
     const hasChat = data.settings.has_telegram_chat_id;
-    chatInput.placeholder = hasChat ? 'Leave blank to keep current' : 'Enter chat ID (required for notifications)';
+    chatInput.value = data.settings.telegram_chat_id ?? '';
+    chatInput.placeholder = hasChat ? '' : 'Enter chat ID (required for notifications)';
     chatStatus.textContent = hasChat ? 'Configured' : 'Not set';
     chatStatus.className = 'status-badge ' + (hasChat ? 'configured' : 'missing');
   }
@@ -528,12 +530,10 @@ async function saveAppSettings() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         github_check_interval_minutes: intervalVal,
-        ...(telegramToken && { telegram_bot_token: telegramToken }),
-        ...(telegramChatId && { telegram_chat_id: telegramChatId }),
+        ...(telegramToken !== null && { telegram_bot_token: telegramToken }),
+        ...(telegramChatId !== null && { telegram_chat_id: telegramChatId }),
       }),
     });
-    document.getElementById('setting-telegram-token').value = '';
-    document.getElementById('setting-telegram-chat-id').value = '';
     await loadConfig();
     showToast(`Settings saved`);
   } catch (e) {
