@@ -127,6 +127,7 @@
       <div class="service-form" id="service-form" style="display:none">
         <h3 id="service-form-title">Add Service</h3>
         <div class="form-grid">
+          <div class="form-group-label">General</div>
           <div class="field">
             <label>Name *</label>
             <input id="sf-name" type="text" placeholder="Gitea">
@@ -135,6 +136,7 @@
             <label>GitHub repo (owner/repo)</label>
             <input id="sf-github" type="text" placeholder="go-gitea/gitea">
           </div>
+          <div class="form-group-label">Installed Version</div>
           <div class="field">
             <label>Version source</label>
             <select id="sf-version-type">
@@ -175,6 +177,7 @@
               <div class="hint">Regex applied to the installed version value, e.g. <code>v?(\d+\.\d+\.\d+)</code></div>
             </div>
           </div>
+          <div class="form-group-label">Latest Version</div>
           <div class="field">
             <label>Latest version URL <span class="text-muted" style="font-weight:normal">(optional)</span></label>
             <input id="sf-latest-url" type="text" placeholder="http://192.168.1.10:8080/api/latest">
@@ -190,6 +193,7 @@
             <input id="sf-latest-regex" type="text" placeholder="v?(\d+\.\d+\.\d+)">
             <div class="hint">Regex applied to the latest version string</div>
           </div>
+          <div class="form-group-label">Authentication</div>
           <div class="field">
             <label>Basic Auth <span class="text-muted" style="font-weight:normal">(optional)</span></label>
             <div class="password-wrap">
