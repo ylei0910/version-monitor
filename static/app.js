@@ -754,6 +754,12 @@ async function init() {
   document.getElementById('sort-select').value = savedSort;
 
   try {
+    const health = await apiFetch('/health');
+    const el = document.getElementById('app-version');
+    if (el && health.version) el.textContent = `v${health.version}`;
+  } catch { /* non-critical */ }
+
+  try {
     await loadConfig();
     await loadServices();
   } catch (e) {
