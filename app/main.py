@@ -106,8 +106,8 @@ async def _build_service_statuses() -> list[ServiceStatus]:
         if svc.latest_url:
             latest_version, lu_err = await fetch_latest_from_url(
                 svc.latest_url, svc.latest_key, _http_client,
-                basic_auth=svc.basic_auth,
-                auth_header=svc.auth_header,
+                basic_auth=svc.latest_basic_auth,
+                auth_header=svc.latest_auth_header,
                 latest_regex=svc.latest_regex,
             )
             if lu_err and not latest_version:
@@ -261,8 +261,12 @@ async def get_config():
             has_latest_url=svc.latest_url is not None,
             has_basic_auth=svc.basic_auth is not None,
             has_auth_header=svc.auth_header is not None,
+            has_latest_basic_auth=svc.latest_basic_auth is not None,
+            has_latest_auth_header=svc.latest_auth_header is not None,
             basic_auth=svc.basic_auth,
             auth_header=svc.auth_header,
+            latest_basic_auth=svc.latest_basic_auth,
+            latest_auth_header=svc.latest_auth_header,
         )
         for svc in services
     ]
@@ -294,6 +298,8 @@ async def update_services(body: UpdateServicesRequest):
         svc.model_copy(update={
             "basic_auth": svc.basic_auth or (existing[svc.name].basic_auth if svc.name in existing else None),
             "auth_header": svc.auth_header or (existing[svc.name].auth_header if svc.name in existing else None),
+            "latest_basic_auth": svc.latest_basic_auth or (existing[svc.name].latest_basic_auth if svc.name in existing else None),
+            "latest_auth_header": svc.latest_auth_header or (existing[svc.name].latest_auth_header if svc.name in existing else None),
         })
         for svc in body.services
     ]

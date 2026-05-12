@@ -379,9 +379,9 @@ function populateServicesTable(configData) {
     } else {
       sourceHtml = `<span class="badge manual">manual</span>`;
     }
-    const authTitle = svc.has_auth_header ? 'Authorization header configured' : svc.has_basic_auth ? 'Basic auth configured' : '';
-    const authBadge = (svc.has_basic_auth || svc.has_auth_header)
-      ? `<span title="${authTitle}" style="color:var(--text-muted);display:inline-flex;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
+    const hasAnyAuth = svc.has_basic_auth || svc.has_auth_header || svc.has_latest_basic_auth || svc.has_latest_auth_header;
+    const authBadge = hasAnyAuth
+      ? `<span title="Authentication configured" style="color:var(--text-muted);display:inline-flex;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
       : '';
 
     tr.innerHTML = `
@@ -452,7 +452,7 @@ function hideServiceForm() {
 }
 
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-basic-auth', 'sf-auth-header'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-basic-auth', 'sf-auth-header', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-latest-basic-auth', 'sf-latest-auth-header'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'manual';
@@ -484,13 +484,13 @@ function openServiceForm(nameToEdit) {
     document.getElementById('sf-github').value = svc.github ?? '';
     document.getElementById('sf-version-url').value = svc.version_url ?? '';
     document.getElementById('sf-version-regex').value = svc.version_regex ?? '';
+    document.getElementById('sf-basic-auth').value = svc.basic_auth ?? '';
+    document.getElementById('sf-auth-header').value = svc.auth_header ?? '';
     document.getElementById('sf-latest-url').value = svc.latest_url ?? '';
     document.getElementById('sf-latest-key').value = svc.latest_key ?? '';
     document.getElementById('sf-latest-regex').value = svc.latest_regex ?? '';
-    const authField = document.getElementById('sf-basic-auth');
-    authField.value = svc.basic_auth ?? '';
-    authField.placeholder = 'username:password';
-    document.getElementById('sf-auth-header').value = svc.auth_header ?? '';
+    document.getElementById('sf-latest-basic-auth').value = svc.latest_basic_auth ?? '';
+    document.getElementById('sf-latest-auth-header').value = svc.latest_auth_header ?? '';
     if (!svc.version_url) {
       document.getElementById('sf-version-type').value = 'manual';
       toggleVersionTypeFields('manual');
@@ -539,8 +539,10 @@ async function saveServiceForm() {
   const latest_url = document.getElementById('sf-latest-url').value.trim() || null;
   const latest_key = latest_url ? (document.getElementById('sf-latest-key').value.trim() || null) : null;
   const latest_regex = document.getElementById('sf-latest-regex').value.trim() || null;
-  const basic_auth = document.getElementById('sf-basic-auth').value.trim() || null;
-  const auth_header = document.getElementById('sf-auth-header').value.trim() || null;
+  const basic_auth = vtype !== 'manual' ? (document.getElementById('sf-basic-auth').value.trim() || null) : null;
+  const auth_header = vtype !== 'manual' ? (document.getElementById('sf-auth-header').value.trim() || null) : null;
+  const latest_basic_auth = latest_url ? (document.getElementById('sf-latest-basic-auth').value.trim() || null) : null;
+  const latest_auth_header = latest_url ? (document.getElementById('sf-latest-auth-header').value.trim() || null) : null;
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
     ...(version_key && { version_key }), ...(version_template && { version_template }),
@@ -550,7 +552,9 @@ async function saveServiceForm() {
     ...(latest_key && { latest_key }),
     ...(latest_regex && { latest_regex }),
     ...(basic_auth && { basic_auth }),
-    ...(auth_header && { auth_header }) };
+    ...(auth_header && { auth_header }),
+    ...(latest_basic_auth && { latest_basic_auth }),
+    ...(latest_auth_header && { latest_auth_header }) };
 
   // Build updated list
   let services = Object.values(configMeta).map(s => ({
@@ -565,6 +569,8 @@ async function saveServiceForm() {
     ...(s.latest_url && { latest_url: s.latest_url }),
     ...(s.latest_key && { latest_key: s.latest_key }),
     ...(s.latest_regex && { latest_regex: s.latest_regex }),
+    ...(s.latest_basic_auth && { latest_basic_auth: s.latest_basic_auth }),
+    ...(s.latest_auth_header && { latest_auth_header: s.latest_auth_header }),
   }));
 
   if (editingService) {

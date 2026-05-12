@@ -18,8 +18,10 @@ class ServiceConfig(BaseModel):
     latest_url: Optional[str] = None      # REST API URL to fetch latest version from
     latest_key: Optional[str] = None      # dot-notation JSON key for latest_url response
     latest_regex: Optional[str] = None    # regex applied to latest version string
-    basic_auth: Optional[str] = None  # "username:password"
-    auth_header: Optional[str] = None  # raw Authorization header value, e.g. "Bearer <token>"
+    basic_auth: Optional[str] = None        # "username:password" for version_url
+    auth_header: Optional[str] = None       # Authorization header for version_url
+    latest_basic_auth: Optional[str] = None  # "username:password" for latest_url
+    latest_auth_header: Optional[str] = None  # Authorization header for latest_url
 
 
 class ServiceStatus(BaseModel):
@@ -71,8 +73,12 @@ class ConfigServiceMeta(BaseModel):
     has_latest_url: bool
     has_basic_auth: bool
     has_auth_header: bool
+    has_latest_basic_auth: bool
+    has_latest_auth_header: bool
     basic_auth: Optional[str] = None
     auth_header: Optional[str] = None
+    latest_basic_auth: Optional[str] = None
+    latest_auth_header: Optional[str] = None
 
 
 class AppSettings(BaseModel):
