@@ -402,6 +402,14 @@ body {
   color: var(--text-muted);
   user-select: none;
 }
+.form-group-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
 #sf-latest-fields { display: flex; flex-direction: column; gap: 12px; }
 .status-badge { font-weight: 500; }
 .status-badge.configured { color: var(--green); }
