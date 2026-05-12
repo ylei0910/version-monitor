@@ -195,21 +195,22 @@
               <div class="hint" id="sf-auth-hint"></div>
             </div>
           </div>
-          <div class="form-group-label">Latest Version</div>
+          <div class="form-group-label">
+            <label class="checkbox-label">
+              <input type="checkbox" id="sf-use-latest-url">
+              Custom Latest Version URL
+            </label>
+          </div>
+          <div id="sf-latest-fields" style="display:none">
           <div class="field">
-            <label>Latest version URL <span class="text-muted" style="font-weight:normal">(optional)</span></label>
+            <label>Latest version URL</label>
             <input id="sf-latest-url" type="text" placeholder="http://192.168.1.10:8080/api/latest">
             <div class="hint">REST API endpoint returning the latest version as JSON. Takes precedence over GitHub if set.</div>
           </div>
           <div class="field">
-            <label>Latest key <span class="text-muted" style="font-weight:normal">(required with Latest URL)</span></label>
+            <label>Latest key <span class="text-muted" style="font-weight:normal">(required)</span></label>
             <input id="sf-latest-key" type="text" placeholder="version">
             <div class="hint">Dot-notation JSON key, e.g. <code>version</code> or <code>release.tag</code></div>
-          </div>
-          <div class="field">
-            <label>Latest regex <span class="text-muted" style="font-weight:normal">(optional)</span></label>
-            <input id="sf-latest-regex" type="text" placeholder="v?(\d+\.\d+\.\d+)">
-            <div class="hint">Regex applied to the latest version string</div>
           </div>
           <div class="field">
             <label>Authentication</label>
@@ -228,6 +229,12 @@
               </button>
             </div>
             <div class="hint" id="sf-latest-auth-hint"></div>
+          </div>
+          </div><!-- end sf-latest-fields -->
+          <div class="field">
+            <label>Latest regex <span class="text-muted" style="font-weight:normal">(optional)</span></label>
+            <input id="sf-latest-regex" type="text" placeholder="v?(\d+\.\d+\.\d+)">
+            <div class="hint">Regex applied to the latest version string (GitHub or custom URL)</div>
           </div>
         </div>
         <div class="form-actions" style="margin-top:16px">

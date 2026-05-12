@@ -472,6 +472,11 @@ function setAuthType(selectId, type) {
   }
 }
 
+function toggleLatestFields(show) {
+  document.getElementById('sf-latest-fields').style.display = show ? 'flex' : 'none';
+  document.getElementById('sf-use-latest-url').checked = show;
+}
+
 function clearServiceForm() {
   ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-auth-value', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-latest-auth-value'].forEach(id => {
     document.getElementById(id).value = '';
@@ -480,6 +485,7 @@ function clearServiceForm() {
   toggleVersionTypeFields('manual');
   setAuthType('sf-auth-type', 'none');
   setAuthType('sf-latest-auth-type', 'none');
+  toggleLatestFields(false);
 }
 
 function toggleVersionTypeFields(type) {
@@ -516,6 +522,7 @@ function openServiceForm(nameToEdit) {
     } else {
       setAuthType('sf-auth-type', 'none');
     }
+    toggleLatestFields(!!(svc.latest_url || svc.latest_key || svc.latest_auth_header || svc.latest_basic_auth));
     document.getElementById('sf-latest-url').value = svc.latest_url ?? '';
     document.getElementById('sf-latest-key').value = svc.latest_key ?? '';
     document.getElementById('sf-latest-regex').value = svc.latest_regex ?? '';
@@ -788,6 +795,10 @@ async function init() {
 
   document.getElementById('sf-latest-auth-type').addEventListener('change', e => {
     setAuthType('sf-latest-auth-type', e.target.value);
+  });
+
+  document.getElementById('sf-use-latest-url').addEventListener('change', e => {
+    toggleLatestFields(e.target.checked);
   });
 
   document.getElementById('save-settings-btn').addEventListener('click', saveAppSettings);
