@@ -451,12 +451,35 @@ function hideServiceForm() {
   editingService = null;
 }
 
+function setAuthType(selectId, type) {
+  const select = document.getElementById(selectId);
+  select.value = type;
+  const isVersion = selectId === 'sf-auth-type';
+  const valueField = document.getElementById(isVersion ? 'sf-auth-value-field' : 'sf-latest-auth-value-field');
+  const input = document.getElementById(isVersion ? 'sf-auth-value' : 'sf-latest-auth-value');
+  const hint = document.getElementById(isVersion ? 'sf-auth-hint' : 'sf-latest-auth-hint');
+  if (type === 'none') {
+    valueField.style.display = 'none';
+    input.value = '';
+  } else if (type === 'basic') {
+    valueField.style.display = 'block';
+    input.placeholder = 'username:password';
+    hint.textContent = 'HTTP Basic Auth credentials';
+  } else {
+    valueField.style.display = 'block';
+    input.placeholder = 'Bearer <token>';
+    hint.innerHTML = 'Raw <code>Authorization</code> header value, e.g. <code>Bearer mytoken</code>';
+  }
+}
+
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-basic-auth', 'sf-auth-header', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-latest-basic-auth', 'sf-latest-auth-header'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-auth-value', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-latest-auth-value'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'manual';
   toggleVersionTypeFields('manual');
+  setAuthType('sf-auth-type', 'none');
+  setAuthType('sf-latest-auth-type', 'none');
 }
 
 function toggleVersionTypeFields(type) {
@@ -484,13 +507,27 @@ function openServiceForm(nameToEdit) {
     document.getElementById('sf-github').value = svc.github ?? '';
     document.getElementById('sf-version-url').value = svc.version_url ?? '';
     document.getElementById('sf-version-regex').value = svc.version_regex ?? '';
-    document.getElementById('sf-basic-auth').value = svc.basic_auth ?? '';
-    document.getElementById('sf-auth-header').value = svc.auth_header ?? '';
+    if (svc.auth_header) {
+      setAuthType('sf-auth-type', 'header');
+      document.getElementById('sf-auth-value').value = svc.auth_header;
+    } else if (svc.basic_auth) {
+      setAuthType('sf-auth-type', 'basic');
+      document.getElementById('sf-auth-value').value = svc.basic_auth;
+    } else {
+      setAuthType('sf-auth-type', 'none');
+    }
     document.getElementById('sf-latest-url').value = svc.latest_url ?? '';
     document.getElementById('sf-latest-key').value = svc.latest_key ?? '';
     document.getElementById('sf-latest-regex').value = svc.latest_regex ?? '';
-    document.getElementById('sf-latest-basic-auth').value = svc.latest_basic_auth ?? '';
-    document.getElementById('sf-latest-auth-header').value = svc.latest_auth_header ?? '';
+    if (svc.latest_auth_header) {
+      setAuthType('sf-latest-auth-type', 'header');
+      document.getElementById('sf-latest-auth-value').value = svc.latest_auth_header;
+    } else if (svc.latest_basic_auth) {
+      setAuthType('sf-latest-auth-type', 'basic');
+      document.getElementById('sf-latest-auth-value').value = svc.latest_basic_auth;
+    } else {
+      setAuthType('sf-latest-auth-type', 'none');
+    }
     if (!svc.version_url) {
       document.getElementById('sf-version-type').value = 'manual';
       toggleVersionTypeFields('manual');
@@ -539,10 +576,14 @@ async function saveServiceForm() {
   const latest_url = document.getElementById('sf-latest-url').value.trim() || null;
   const latest_key = latest_url ? (document.getElementById('sf-latest-key').value.trim() || null) : null;
   const latest_regex = document.getElementById('sf-latest-regex').value.trim() || null;
-  const basic_auth = vtype !== 'manual' ? (document.getElementById('sf-basic-auth').value.trim() || null) : null;
-  const auth_header = vtype !== 'manual' ? (document.getElementById('sf-auth-header').value.trim() || null) : null;
-  const latest_basic_auth = latest_url ? (document.getElementById('sf-latest-basic-auth').value.trim() || null) : null;
-  const latest_auth_header = latest_url ? (document.getElementById('sf-latest-auth-header').value.trim() || null) : null;
+  const authType = document.getElementById('sf-auth-type').value;
+  const authValue = document.getElementById('sf-auth-value').value.trim() || null;
+  const basic_auth = vtype !== 'manual' && authType === 'basic' ? authValue : null;
+  const auth_header = vtype !== 'manual' && authType === 'header' ? authValue : null;
+  const latestAuthType = document.getElementById('sf-latest-auth-type').value;
+  const latestAuthValue = document.getElementById('sf-latest-auth-value').value.trim() || null;
+  const latest_basic_auth = latest_url && latestAuthType === 'basic' ? latestAuthValue : null;
+  const latest_auth_header = latest_url && latestAuthType === 'header' ? latestAuthValue : null;
 
   const newSvc = { name, ...(github && { github }), ...(version_url && { version_url }),
     ...(version_key && { version_key }), ...(version_template && { version_template }),
@@ -739,6 +780,14 @@ async function init() {
 
   document.getElementById('sf-version-type').addEventListener('change', e => {
     toggleVersionTypeFields(e.target.value);
+  });
+
+  document.getElementById('sf-auth-type').addEventListener('change', e => {
+    setAuthType('sf-auth-type', e.target.value);
+  });
+
+  document.getElementById('sf-latest-auth-type').addEventListener('change', e => {
+    setAuthType('sf-latest-auth-type', e.target.value);
   });
 
   document.getElementById('save-settings-btn').addEventListener('click', saveAppSettings);
