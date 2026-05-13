@@ -8,6 +8,6 @@
 
 ## Versioning
 
-- Only bump the `VERSION` file when changes are merged back to `main`.
-- Do not update `VERSION` on feature branches.
+- `VERSION` is bumped automatically by CI (`bump-version.yml`) on every merge to `main`. Do not manually edit `VERSION`.
+- Do not update `VERSION` on feature branches — the bot handles it after merge.
 - Version format: `MAJOR.MINOR.PATCH` (currently tracked in `./VERSION`).
