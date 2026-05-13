@@ -33,3 +33,12 @@ services:
     latest_url: "http://192.168.1.14:8080/api/latest"  # fetch latest from REST API instead of GitHub
     latest_key: "version"                               # dot-notation key, e.g. "release.tag"
     # latest_regex: "v?(\\d+\\.\\d+\\.\\d+)"           # optional: strip prefix from result
+
+  - name: Zigbee2MQTT
+    github: Koenkk/zigbee2mqtt
+    mqtt_broker: "192.168.1.10"               # MQTT broker hostname
+    # mqtt_port: 1883                          # optional, defaults to 1883
+    mqtt_topic: "zigbee2mqtt/bridge/info"     # publishes retained JSON with "version" key
+    mqtt_username: "myuser"                   # optional
+    mqtt_password: "mypassword"               # optional
+    # version_key: "version"                  # optional, defaults to "version"

@@ -22,6 +22,11 @@ class ServiceConfig(BaseModel):
     auth_header: Optional[str] = None       # Authorization header for version_url
     latest_basic_auth: Optional[str] = None  # "username:password" for latest_url
     latest_auth_header: Optional[str] = None  # Authorization header for latest_url
+    mqtt_broker: Optional[str] = None     # MQTT broker hostname
+    mqtt_port: Optional[int] = None       # MQTT broker port (default: 1883)
+    mqtt_topic: Optional[str] = None      # MQTT topic to subscribe to
+    mqtt_username: Optional[str] = None   # MQTT username
+    mqtt_password: Optional[str] = None   # MQTT password
 
 
 class ServiceStatus(BaseModel):
@@ -79,6 +84,12 @@ class ConfigServiceMeta(BaseModel):
     auth_header: Optional[str] = None
     latest_basic_auth: Optional[str] = None
     latest_auth_header: Optional[str] = None
+    mqtt_broker: Optional[str] = None
+    mqtt_port: Optional[int] = None
+    mqtt_topic: Optional[str] = None
+    mqtt_username: Optional[str] = None
+    mqtt_password: Optional[str] = None
+    has_mqtt: bool = False
 
 
 class AppSettings(BaseModel):

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 import re
 from typing import Optional
@@ -158,3 +160,52 @@ async def fetch_installed_version(
         return _post_process(version, version_regex)
 
     return None, "no version_key, version_template, or version_metric configured"
+
+
+async def fetch_installed_version_mqtt(
+    broker: str,
+    topic: str,
+    version_key: Optional[str],
+    port: int = 1883,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+    version_regex: Optional[str] = None,
+    timeout: float = 10.0,
+) -> tuple[Optional[str], Optional[str]]:
+    """Return (version, error) by subscribing to an MQTT topic and reading one retained message."""
+    try:
+        import aiomqtt
+    except ImportError:
+        return None, "aiomqtt not installed"
+
+    key = version_key or "version"
+
+    async def _receive() -> tuple[Optional[str], Optional[str]]:
+        async with aiomqtt.Client(
+            hostname=broker,
+            port=port,
+            username=username,
+            password=password,
+        ) as client:
+            await client.subscribe(topic)
+            async for message in client.messages:
+                payload = message.payload
+                if isinstance(payload, bytes):
+                    payload = payload.decode()
+                try:
+                    data = json.loads(payload)
+                except Exception:
+                    return None, "invalid JSON payload"
+                if not isinstance(data, dict):
+                    return None, "unexpected payload format (not a JSON object)"
+                version = _extract_by_key(data, key)
+                if version is None:
+                    return None, f"version_key '{key}' not found in payload"
+                return _post_process(version, version_regex)
+
+    try:
+        return await asyncio.wait_for(_receive(), timeout=timeout)
+    except TimeoutError:
+        return None, f"MQTT timeout: no message received on '{topic}' within {timeout:.0f}s"
+    except Exception as e:
+        return None, f"MQTT error: {e}"

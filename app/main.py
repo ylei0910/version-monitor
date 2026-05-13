@@ -44,7 +44,7 @@ from app.models import (
 )
 from app.notifier import send_telegram_notification
 from app.scheduler import create_scheduler, reschedule
-from app.version import _apply_regex, fetch_installed_version, fetch_latest_from_url
+from app.version import _apply_regex, fetch_installed_version, fetch_installed_version_mqtt, fetch_latest_from_url
 
 logging.basicConfig(
     level=logging.INFO,
@@ -86,7 +86,22 @@ async def _build_service_statuses() -> list[ServiceStatus]:
         latest_version: Optional[str] = None
         errors: list[str] = []
 
-        if svc.version_url:
+        if svc.mqtt_broker:
+            fetched, err = await fetch_installed_version_mqtt(
+                broker=svc.mqtt_broker,
+                topic=svc.mqtt_topic or "",
+                version_key=svc.version_key,
+                port=svc.mqtt_port or 1883,
+                username=svc.mqtt_username,
+                password=svc.mqtt_password,
+                version_regex=svc.version_regex,
+            )
+            if fetched:
+                installed_version = fetched
+            else:
+                errors.append(err or "MQTT fetch failed")
+                installed_version = manual_versions.get(svc.name)
+        elif svc.version_url:
             fetched, err = await fetch_installed_version(
                 svc.version_url, svc.version_key, svc.version_template, _http_client,
                 basic_auth=svc.basic_auth,
@@ -130,7 +145,7 @@ async def _build_service_statuses() -> list[ServiceStatus]:
             installed_version=installed_version,
             latest_version=latest_version,
             is_up_to_date=is_up_to_date,
-            is_manual=svc.version_url is None,
+            is_manual=svc.version_url is None and svc.mqtt_broker is None,
             has_github=svc.github is not None,
             error="; ".join(errors) if errors else None,
         )
@@ -267,6 +282,12 @@ async def get_config():
             auth_header=svc.auth_header,
             latest_basic_auth=svc.latest_basic_auth,
             latest_auth_header=svc.latest_auth_header,
+            mqtt_broker=svc.mqtt_broker,
+            mqtt_port=svc.mqtt_port,
+            mqtt_topic=svc.mqtt_topic,
+            mqtt_username=svc.mqtt_username,
+            mqtt_password=svc.mqtt_password,
+            has_mqtt=svc.mqtt_broker is not None,
         )
         for svc in services
     ]
@@ -300,6 +321,8 @@ async def update_services(body: UpdateServicesRequest):
             "auth_header": svc.auth_header or (existing[svc.name].auth_header if svc.name in existing else None),
             "latest_basic_auth": svc.latest_basic_auth or (existing[svc.name].latest_basic_auth if svc.name in existing else None),
             "latest_auth_header": svc.latest_auth_header or (existing[svc.name].latest_auth_header if svc.name in existing else None),
+            "mqtt_username": svc.mqtt_username or (existing[svc.name].mqtt_username if svc.name in existing else None),
+            "mqtt_password": svc.mqtt_password or (existing[svc.name].mqtt_password if svc.name in existing else None),
         })
         for svc in body.services
     ]
