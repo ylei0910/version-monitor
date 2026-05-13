@@ -368,7 +368,9 @@ function populateServicesTable(configData) {
     tr.draggable = true;
     tr.dataset.name = svc.name;
     let sourceHtml;
-    if (svc.version_metric) {
+    if (svc.has_mqtt) {
+      sourceHtml = `<span class="badge">mqtt</span>`;
+    } else if (svc.version_metric) {
       sourceHtml = `<span class="badge">metrics</span>`;
     } else if (svc.version_key) {
       sourceHtml = `<span class="badge">key</span>`;
@@ -478,7 +480,7 @@ function toggleLatestFields(show) {
 }
 
 function clearServiceForm() {
-  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-auth-value', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-latest-auth-value'].forEach(id => {
+  ['sf-name', 'sf-github', 'sf-version-url', 'sf-version-key', 'sf-version-template', 'sf-version-metric', 'sf-version-label', 'sf-version-regex', 'sf-auth-value', 'sf-latest-url', 'sf-latest-key', 'sf-latest-regex', 'sf-latest-auth-value', 'sf-mqtt-broker', 'sf-mqtt-port', 'sf-mqtt-topic', 'sf-mqtt-version-key', 'sf-mqtt-username', 'sf-mqtt-password', 'sf-mqtt-version-regex'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('sf-version-type').value = 'manual';
@@ -490,7 +492,8 @@ function clearServiceForm() {
 
 function toggleVersionTypeFields(type) {
   const urlFields = document.getElementById('sf-url-fields');
-  urlFields.style.display = type === 'manual' ? 'none' : 'flex';
+  urlFields.style.display = (type === 'manual' || type === 'mqtt') ? 'none' : 'flex';
+  document.getElementById('sf-mqtt-fields').style.display = type === 'mqtt' ? 'flex' : 'none';
   document.getElementById('sf-version-url').placeholder = type === 'metrics'
     ? 'http://192.168.1.10:8080/metrics'
     : 'http://192.168.1.10:3000/api/v1/version';
@@ -535,7 +538,17 @@ function openServiceForm(nameToEdit) {
     } else {
       setAuthType('sf-latest-auth-type', 'none');
     }
-    if (!svc.version_url) {
+    if (svc.mqtt_broker) {
+      document.getElementById('sf-version-type').value = 'mqtt';
+      document.getElementById('sf-mqtt-broker').value = svc.mqtt_broker ?? '';
+      document.getElementById('sf-mqtt-port').value = svc.mqtt_port ?? '';
+      document.getElementById('sf-mqtt-topic').value = svc.mqtt_topic ?? '';
+      document.getElementById('sf-mqtt-version-key').value = svc.version_key ?? '';
+      document.getElementById('sf-mqtt-username').value = svc.mqtt_username ?? '';
+      document.getElementById('sf-mqtt-password').value = svc.mqtt_password ?? '';
+      document.getElementById('sf-mqtt-version-regex').value = svc.version_regex ?? '';
+      toggleVersionTypeFields('mqtt');
+    } else if (!svc.version_url) {
       document.getElementById('sf-version-type').value = 'manual';
       toggleVersionTypeFields('manual');
     } else if (svc.version_metric) {
@@ -580,6 +593,15 @@ async function saveServiceForm() {
   const version_regex = vtype !== 'manual'
     ? (document.getElementById('sf-version-regex').value.trim() || null)
     : null;
+  const mqtt_broker = vtype === 'mqtt' ? (document.getElementById('sf-mqtt-broker').value.trim() || null) : null;
+  const mqtt_port_raw = vtype === 'mqtt' ? parseInt(document.getElementById('sf-mqtt-port').value.trim(), 10) : NaN;
+  const mqtt_port = !isNaN(mqtt_port_raw) ? mqtt_port_raw : null;
+  const mqtt_topic = vtype === 'mqtt' ? (document.getElementById('sf-mqtt-topic').value.trim() || null) : null;
+  const mqtt_version_key = vtype === 'mqtt' ? (document.getElementById('sf-mqtt-version-key').value.trim() || null) : null;
+  const mqtt_username = vtype === 'mqtt' ? (document.getElementById('sf-mqtt-username').value.trim() || null) : null;
+  const mqtt_password = vtype === 'mqtt' ? (document.getElementById('sf-mqtt-password').value.trim() || null) : null;
+  const mqtt_version_regex = vtype === 'mqtt' ? (document.getElementById('sf-mqtt-version-regex').value.trim() || null) : null;
+
   const latest_url = document.getElementById('sf-latest-url').value.trim() || null;
   const latest_key = latest_url ? (document.getElementById('sf-latest-key').value.trim() || null) : null;
   const latest_regex = document.getElementById('sf-latest-regex').value.trim() || null;
@@ -596,6 +618,13 @@ async function saveServiceForm() {
     ...(version_key && { version_key }), ...(version_template && { version_template }),
     ...(version_metric && { version_metric }), ...(version_label && { version_label }),
     ...(version_regex && { version_regex }),
+    ...(mqtt_broker && { mqtt_broker }),
+    ...(mqtt_port && { mqtt_port }),
+    ...(mqtt_topic && { mqtt_topic }),
+    ...(mqtt_version_key && { version_key: mqtt_version_key }),
+    ...(mqtt_username && { mqtt_username }),
+    ...(mqtt_password && { mqtt_password }),
+    ...(mqtt_version_regex && { version_regex: mqtt_version_regex }),
     ...(latest_url && { latest_url }),
     ...(latest_key && { latest_key }),
     ...(latest_regex && { latest_regex }),
@@ -614,6 +643,11 @@ async function saveServiceForm() {
     ...(s.version_metric && { version_metric: s.version_metric }),
     ...(s.version_label && { version_label: s.version_label }),
     ...(s.version_regex && { version_regex: s.version_regex }),
+    ...(s.mqtt_broker && { mqtt_broker: s.mqtt_broker }),
+    ...(s.mqtt_port && { mqtt_port: s.mqtt_port }),
+    ...(s.mqtt_topic && { mqtt_topic: s.mqtt_topic }),
+    ...(s.mqtt_username && { mqtt_username: s.mqtt_username }),
+    ...(s.mqtt_password && { mqtt_password: s.mqtt_password }),
     ...(s.latest_url && { latest_url: s.latest_url }),
     ...(s.latest_key && { latest_key: s.latest_key }),
     ...(s.latest_regex && { latest_regex: s.latest_regex }),
