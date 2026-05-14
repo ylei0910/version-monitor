@@ -141,7 +141,7 @@ if [ -n "${RUNNER_TOKEN}" ]; then
     runuser -u "${SERVICE_USER}" -- "${RUNNER_DIR}/config.sh" \
         --url "https://github.com/${GITHUB_REPO}" \
         --token "${RUNNER_TOKEN}" \
-        --name "$(hostname)" \
+        --name "$(hostname)-${RUNNER_LABEL}" \
         --labels "self-hosted,version-monitor,${RUNNER_LABEL}" \
         --work "${RUNNER_DIR}/_work" \
         --unattended \
