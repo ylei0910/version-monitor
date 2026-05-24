@@ -22,7 +22,7 @@ function updateFavicon(outdatedCount) {
     if (outdatedCount > 0) {
       const label = outdatedCount > 9 ? '9+' : String(outdatedCount);
       const r = 9;
-      const bx = 32 - r, by = r;
+      const bx = 32 - r, by = 32 - r;
       ctx.beginPath();
       ctx.arc(bx, by, r, 0, 2 * Math.PI);
       ctx.fillStyle = '#f85149';
