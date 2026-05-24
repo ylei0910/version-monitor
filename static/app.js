@@ -39,6 +39,16 @@ function updateFavicon(outdatedCount) {
     link.href = canvas.toDataURL();
   };
   img.src = '/favicon.svg';
+
+  const logoBadge = document.getElementById('logo-badge');
+  if (logoBadge) {
+    if (outdatedCount > 0) {
+      logoBadge.textContent = outdatedCount > 9 ? '9+' : String(outdatedCount);
+      logoBadge.hidden = false;
+    } else {
+      logoBadge.hidden = true;
+    }
+  }
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────

@@ -43,6 +43,28 @@ body {
   z-index: 10;
 }
 
+.logo-wrap {
+  position: relative;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.logo-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -6px;
+  background: #f85149;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 6px;
+  min-width: 14px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .header h1 {
   font-size: 18px;
   font-weight: 600;
