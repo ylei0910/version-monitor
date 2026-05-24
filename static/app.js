@@ -9,6 +9,38 @@ let editingService = null; // name of service being edited in the form, or null 
 let customOrder = JSON.parse(localStorage.getItem(LS_CUSTOM_ORDER) || 'null') || []; // names in user-defined order
 let lastServices = []; // cached last API response for instant re-sort
 
+// ── Favicon badge ──────────────────────────────────────────────────────────
+
+function updateFavicon(outdatedCount) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 32, 32);
+    if (outdatedCount > 0) {
+      const label = outdatedCount > 9 ? '9+' : String(outdatedCount);
+      const r = 9;
+      const bx = 32 - r, by = r;
+      ctx.beginPath();
+      ctx.arc(bx, by, r, 0, 2 * Math.PI);
+      ctx.fillStyle = '#f85149';
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${label.length > 1 ? 9 : 11}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, bx, by);
+    }
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+    link.type = 'image/png';
+    link.href = canvas.toDataURL();
+  };
+  img.src = '/favicon.svg';
+}
+
 // ── Utilities ──────────────────────────────────────────────────────────────
 
 function escapeHtml(str) {
@@ -126,6 +158,10 @@ async function loadServices() {
   document.getElementById('last-github-fetch').textContent = data.last_github_fetch
     ? formatDate(data.last_github_fetch)
     : '—';
+
+  const outdatedCount = data.services.filter(s => s.is_up_to_date === false).length;
+  updateFavicon(outdatedCount);
+  document.title = outdatedCount > 0 ? `(${outdatedCount}) Version Monitor` : 'Version Monitor';
 }
 
 async function saveVersion(name, version) {
