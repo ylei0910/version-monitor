@@ -300,8 +300,10 @@ async function triggerNotify() {
     const data = await apiFetch('/api/notify', { method: 'POST' });
     if (data.sent) {
       showToast(`Notification sent — ${data.outdated_count} update(s), ${data.error_count} failure(s)`);
-    } else {
+    } else if (data.outdated_count === 0 && data.error_count === 0) {
       showToast('All services up to date — nothing to notify');
+    } else {
+      showToast(data.message || `Notification failed — ${data.outdated_count} update(s) pending`, 'error');
     }
   } catch (e) {
     showToast(`Notify failed: ${e.message}`, 'error');
