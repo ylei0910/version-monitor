@@ -125,51 +125,97 @@ async function loadConfig() {
   return data;
 }
 
-async function loadServices() {
-  const data = await apiFetch('/api/services');
+function renderLoadingCard(name) {
   const grid = document.getElementById('services-grid');
+  if (grid.querySelector(`[data-name="${CSS.escape(name)}"]`)) return;
 
-  if (data.services.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <h2>No services configured</h2>
-        <p>Open Settings to add your first service.</p>
-      </div>`;
-    document.getElementById('last-updated').textContent = '';
+  const card = document.createElement('div');
+  card.className = 'service-card';
+  card.dataset.name = name;
+
+  const meta = configMeta[name];
+  const githubHtml = meta?.has_github && meta?.github
+    ? `<div class="card-github"><a href="https://github.com/${escapeHtml(meta.github)}" target="_blank" rel="noopener">&#128279; ${escapeHtml(meta.github)}</a></div>`
+    : '';
+
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="service-name">${escapeHtml(name)}</span>
+      <span class="status-dot unknown" title="loading"></span>
+    </div>
+    <div class="card-versions">
+      <div class="version-row">
+        <span class="version-label">Installed</span>
+        <span class="version-value loading">&nbsp;</span>
+      </div>
+      <div class="version-row">
+        <span class="version-label">Latest</span>
+        <span class="version-value loading">&nbsp;</span>
+      </div>
+    </div>
+    ${githubHtml}
+  `;
+
+  grid.appendChild(card);
+}
+
+async function loadServices() {
+  const grid = document.getElementById('services-grid');
+  const names = Object.keys(configMeta);
+
+  if (names.length === 0) {
+    // configMeta not yet loaded — fall back to single blocking call
+    const data = await apiFetch('/api/services');
+    if (data.services.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <h2>No services configured</h2>
+          <p>Open Settings to add your first service.</p>
+        </div>`;
+      document.getElementById('last-updated').textContent = '';
+      return;
+    }
+    const emptyState = grid.querySelector('.empty-state');
+    if (emptyState) emptyState.remove();
+    lastServices = data.services;
+    for (const svc of data.services) renderCard(svc);
+    applySortToGrid();
+    document.getElementById('last-updated').textContent = formatDate(data.last_updated);
+    document.getElementById('last-github-fetch').textContent = data.last_github_fetch
+      ? formatDate(data.last_github_fetch) : '—';
+    const outdatedCount = data.services.filter(s => s.is_up_to_date === false).length;
+    updateFavicon(outdatedCount);
+    document.title = outdatedCount > 0 ? `(${outdatedCount}) Version Monitor` : 'Version Monitor';
     return;
   }
 
-  // Remove empty state if present
-  const emptyState = grid.querySelector('.empty-state');
-  if (emptyState) emptyState.remove();
+  // Remove empty state and stale cards
+  grid.querySelector('.empty-state')?.remove();
+  const incomingNames = new Set(names);
+  for (const el of [...grid.querySelectorAll('.service-card')]) {
+    if (!incomingNames.has(el.dataset.name)) el.remove();
+  }
 
-  const existingNames = new Set(
-    [...grid.querySelectorAll('.service-card')].map(el => el.dataset.name)
+  // Show loading skeletons for cards not yet in the DOM
+  for (const name of names) renderLoadingCard(name);
+
+  // Fetch each service individually; update its card as it resolves
+  const results = await Promise.allSettled(
+    names.map(name =>
+      apiFetch(`/api/services/${encodeURIComponent(name)}`).then(svc => {
+        renderCard(svc);
+        return svc;
+      })
+    )
   );
-  const incomingNames = new Set(data.services.map(s => s.name));
 
-  // Remove cards for deleted services
-  for (const name of existingNames) {
-    if (!incomingNames.has(name)) {
-      grid.querySelector(`[data-name="${CSS.escape(name)}"]`)?.remove();
-    }
-  }
-
-  lastServices = data.services;
-
-  // Render each service
-  for (const svc of data.services) {
-    renderCard(svc);
-  }
-
+  const services = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+  lastServices = services;
   applySortToGrid();
 
-  document.getElementById('last-updated').textContent = formatDate(data.last_updated);
-  document.getElementById('last-github-fetch').textContent = data.last_github_fetch
-    ? formatDate(data.last_github_fetch)
-    : '—';
+  document.getElementById('last-updated').textContent = formatDate(new Date().toISOString());
 
-  const outdatedCount = data.services.filter(s => s.is_up_to_date === false).length;
+  const outdatedCount = services.filter(s => s.is_up_to_date === false).length;
   updateFavicon(outdatedCount);
   document.title = outdatedCount > 0 ? `(${outdatedCount}) Version Monitor` : 'Version Monitor';
 }

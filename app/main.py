@@ -73,6 +73,81 @@ def _compare_versions(installed: str, latest: str) -> bool:
         return a == b
 
 
+async def _fetch_one_status(
+    svc: ServiceConfig,
+    manual_versions: dict,
+    token: Optional[str],
+    ttl: int,
+) -> ServiceStatus:
+    installed_version: Optional[str] = None
+    latest_version: Optional[str] = None
+    errors: list[str] = []
+
+    if svc.mqtt_broker:
+        fetched, err = await fetch_installed_version_mqtt(
+            broker=svc.mqtt_broker,
+            topic=svc.mqtt_topic or "",
+            version_key=svc.version_key,
+            port=svc.mqtt_port or 1883,
+            username=svc.mqtt_username,
+            password=svc.mqtt_password,
+            version_regex=svc.version_regex,
+        )
+        if fetched:
+            installed_version = fetched
+        else:
+            errors.append(err or "MQTT fetch failed")
+            installed_version = manual_versions.get(svc.name)
+    elif svc.version_url:
+        fetched, err = await fetch_installed_version(
+            svc.version_url, svc.version_key, svc.version_template, _http_client,
+            basic_auth=svc.basic_auth,
+            auth_header=svc.auth_header,
+            version_metric=svc.version_metric,
+            version_label=svc.version_label,
+            version_regex=svc.version_regex,
+        )
+        if fetched:
+            installed_version = fetched
+        else:
+            errors.append(err or "version fetch failed")
+            installed_version = manual_versions.get(svc.name)
+    else:
+        installed_version = manual_versions.get(svc.name)
+
+    if svc.latest_url:
+        latest_version, lu_err = await fetch_latest_from_url(
+            svc.latest_url, svc.latest_key, _http_client,
+            basic_auth=svc.latest_basic_auth,
+            auth_header=svc.latest_auth_header,
+            latest_regex=svc.latest_regex,
+        )
+        if lu_err and not latest_version:
+            errors.append(f"Latest URL: {lu_err}")
+    elif svc.github:
+        latest_version, gh_err = await get_latest_version(
+            svc.github, _http_client, token, ttl
+        )
+        if gh_err and not latest_version:
+            errors.append(f"GitHub: {gh_err}")
+        if latest_version and svc.latest_regex:
+            latest_version = _apply_regex(latest_version, svc.latest_regex) or latest_version
+
+    is_up_to_date: Optional[bool] = None
+    if installed_version and latest_version:
+        is_up_to_date = _compare_versions(installed_version, latest_version)
+
+    return ServiceStatus(
+        name=svc.name,
+        installed_version=installed_version,
+        latest_version=latest_version,
+        is_up_to_date=is_up_to_date,
+        is_manual=svc.version_url is None and svc.mqtt_broker is None,
+        has_github=svc.github is not None,
+        error="; ".join(errors) if errors else None,
+    )
+
+
 async def _build_service_statuses() -> list[ServiceStatus]:
     manual_versions = await get_all_versions()
 
@@ -81,76 +156,7 @@ async def _build_service_statuses() -> list[ServiceStatus]:
         token = _config.github_token
         ttl = _config.github_check_interval_minutes * 60
 
-    async def fetch_one(svc: ServiceConfig) -> ServiceStatus:
-        installed_version: Optional[str] = None
-        latest_version: Optional[str] = None
-        errors: list[str] = []
-
-        if svc.mqtt_broker:
-            fetched, err = await fetch_installed_version_mqtt(
-                broker=svc.mqtt_broker,
-                topic=svc.mqtt_topic or "",
-                version_key=svc.version_key,
-                port=svc.mqtt_port or 1883,
-                username=svc.mqtt_username,
-                password=svc.mqtt_password,
-                version_regex=svc.version_regex,
-            )
-            if fetched:
-                installed_version = fetched
-            else:
-                errors.append(err or "MQTT fetch failed")
-                installed_version = manual_versions.get(svc.name)
-        elif svc.version_url:
-            fetched, err = await fetch_installed_version(
-                svc.version_url, svc.version_key, svc.version_template, _http_client,
-                basic_auth=svc.basic_auth,
-                auth_header=svc.auth_header,
-                version_metric=svc.version_metric,
-                version_label=svc.version_label,
-                version_regex=svc.version_regex,
-            )
-            if fetched:
-                installed_version = fetched
-            else:
-                errors.append(err or "version fetch failed")
-                installed_version = manual_versions.get(svc.name)
-        else:
-            installed_version = manual_versions.get(svc.name)
-
-        if svc.latest_url:
-            latest_version, lu_err = await fetch_latest_from_url(
-                svc.latest_url, svc.latest_key, _http_client,
-                basic_auth=svc.latest_basic_auth,
-                auth_header=svc.latest_auth_header,
-                latest_regex=svc.latest_regex,
-            )
-            if lu_err and not latest_version:
-                errors.append(f"Latest URL: {lu_err}")
-        elif svc.github:
-            latest_version, gh_err = await get_latest_version(
-                svc.github, _http_client, token, ttl
-            )
-            if gh_err and not latest_version:
-                errors.append(f"GitHub: {gh_err}")
-            if latest_version and svc.latest_regex:
-                latest_version = _apply_regex(latest_version, svc.latest_regex) or latest_version
-
-        is_up_to_date: Optional[bool] = None
-        if installed_version and latest_version:
-            is_up_to_date = _compare_versions(installed_version, latest_version)
-
-        return ServiceStatus(
-            name=svc.name,
-            installed_version=installed_version,
-            latest_version=latest_version,
-            is_up_to_date=is_up_to_date,
-            is_manual=svc.version_url is None and svc.mqtt_broker is None,
-            has_github=svc.github is not None,
-            error="; ".join(errors) if errors else None,
-        )
-
-    tasks = [fetch_one(svc) for svc in services]
+    tasks = [_fetch_one_status(svc, manual_versions, token, ttl) for svc in services]
     return await asyncio.gather(*tasks)
 
 
@@ -219,6 +225,18 @@ async def list_services():
         last_updated=datetime.now(timezone.utc),
         last_github_fetch=get_last_fetch_time(),
     )
+
+
+@app.get("/api/services/{name}", response_model=ServiceStatus)
+async def get_service_status(name: str):
+    async with _config_lock:
+        svc = next((s for s in _config.services if s.name == name), None)
+        token = _config.github_token
+        ttl = _config.github_check_interval_minutes * 60
+    if svc is None:
+        raise HTTPException(status_code=404, detail=f"Service '{name}' not found")
+    manual_versions = await get_all_versions()
+    return await _fetch_one_status(svc, manual_versions, token, ttl)
 
 
 @app.post("/api/services/{name}/version", response_model=SaveVersionResponse)

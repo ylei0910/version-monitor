@@ -266,6 +266,21 @@ body {
   word-break: break-word;
 }
 
+/* ── Skeleton loading ── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+.version-value.loading {
+  background: var(--border);
+  border-radius: 3px;
+  color: transparent;
+  min-width: 64px;
+  display: inline-block;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  user-select: none;
+}
+
 /* ── Modal ── */
 .modal-overlay {
   display: none;
