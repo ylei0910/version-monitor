@@ -66,6 +66,14 @@ async def get_latest_version(
             if stale and stale.version:
                 return stale.version, error
         return None, error
+    elif resp.status_code >= 500:
+        error = f"GitHub: HTTP {resp.status_code}"
+        logger.warning("GitHub server error for %s: %s", repo, resp.status_code)
+        async with _lock:
+            stale = _cache.get(repo)
+            if stale and stale.version:
+                return stale.version, error
+        return None, error
     elif resp.status_code != 200:
         version, error = None, f"HTTP {resp.status_code}"
     else:
