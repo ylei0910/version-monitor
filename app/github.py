@@ -45,45 +45,45 @@ async def get_latest_version(
         headers["Authorization"] = f"Bearer {token}"
 
     url = f"https://api.github.com/repos/{repo}/releases/latest"
+    transient_error: Optional[str] = None
     try:
         resp = await client.get(url, headers=headers)
     except (httpx.ConnectError, httpx.TimeoutException) as e:
-        error = f"network error: {type(e).__name__}"
-        logger.warning("GitHub fetch failed for %s: %s", repo, error)
-        async with _lock:
-            stale = _cache.get(repo)
-            if stale and stale.version:
-                return stale.version, error
-        return None, error
+        transient_error = f"network error: {type(e).__name__}"
+        logger.warning("GitHub fetch failed for %s: %s", repo, transient_error)
+        resp = None
 
-    if resp.status_code == 404:
-        version, error = None, "no releases found"
-    elif resp.status_code in (403, 429):
-        error = f"rate limited (HTTP {resp.status_code})"
-        logger.warning("GitHub rate limited for %s", repo)
+    if resp is not None:
+        if resp.status_code == 404:
+            version, error = None, "no releases found"
+        elif resp.status_code in (403, 429):
+            transient_error = f"rate limited (HTTP {resp.status_code})"
+            logger.warning("GitHub rate limited for %s", repo)
+        elif resp.status_code >= 500:
+            transient_error = f"GitHub: HTTP {resp.status_code}"
+            logger.warning("GitHub server error for %s: %s", repo, resp.status_code)
+        elif resp.status_code != 200:
+            version, error = None, f"HTTP {resp.status_code}"
+        else:
+            try:
+                data = resp.json()
+                tag = data.get("tag_name", "")
+                version = tag if tag else None
+                error = None if version else "missing tag_name in response"
+            except Exception as e:
+                version, error = None, f"parse error: {e}"
+
+    if transient_error:
         async with _lock:
             stale = _cache.get(repo)
-            if stale and stale.version:
-                return stale.version, error
-        return None, error
-    elif resp.status_code >= 500:
-        error = f"GitHub: HTTP {resp.status_code}"
-        logger.warning("GitHub server error for %s: %s", repo, resp.status_code)
-        async with _lock:
-            stale = _cache.get(repo)
-            if stale and stale.version:
-                return stale.version, error
-        return None, error
-    elif resp.status_code != 200:
-        version, error = None, f"HTTP {resp.status_code}"
-    else:
-        try:
-            data = resp.json()
-            tag = data.get("tag_name", "")
-            version = tag if tag else None
-            error = None if version else "missing tag_name in response"
-        except Exception as e:
-            version, error = None, f"parse error: {e}"
+            stale_version = stale.version if stale else None
+            _cache[repo] = _CacheEntry(
+                version=stale_version,
+                fetched_at=time.monotonic(),
+                fetched_at_wall=datetime.now(timezone.utc),
+                error=transient_error,
+            )
+        return stale_version, transient_error
 
     async with _lock:
         _cache[repo] = _CacheEntry(
